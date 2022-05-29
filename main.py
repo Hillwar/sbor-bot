@@ -1,126 +1,124 @@
 import telebot
 import config
+from parser import parse
 
+from sbor import Sbor
 from telebot import types
 
-keyboard1 = telebot.types.ReplyKeyboardMarkup()
+
 bot = telebot.TeleBot(config.TOKEN)
+sbor = Sbor()
 timetable = ''
-list_of_servicemans = ''
-dks = ''
-group = 0
 best_people = ['MikhKir', 'julia_severyanova', "EgorVkimow"]
-markup = None
-timetable_button_clicked = False
-servisemans_button_clicked = False
-dks_button_clicked = False
+timetable_buttons_clicked = False
+
+class Buttons:
+    timetable = types.KeyboardButton('Расписание')
+    commanders = types.KeyboardButton('ДКС и ДКО')
+    squads = types.KeyboardButton('Отряды')
+    services = types.KeyboardButton('Службисты')
+    edit = types.KeyboardButton('Изменить')
+    back = types.KeyboardButton('Назад')
+
+    edit_timetable = types.KeyboardButton('Изменить расписание')
+    edit_commanders = types.KeyboardButton('Изменить ДКС и ДКО')
+
+    show_all_squads = types.KeyboardButton('Все отряды')
+    show_squad = []
+    for squad_id in range(1, sbor.get_squads_count() + 1):
+        #buttons_squad.append(types.KeyboardButton('Отряд \'' + sbor.get_squad(squad_id).name + '\''))
+        show_squad.append(types.KeyboardButton('Отряд ' + str(squad_id)))
+
+class Markup:
+    main = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    main.add(Buttons.timetable, Buttons.commanders, Buttons.squads, Buttons.services)
+
+    edit = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    edit.add(Buttons.edit_timetable, Buttons.edit_commanders, Buttons.back)
+
+    squads = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    for squad in Buttons.show_squad:
+        squads.add(squad)
+    squads.add(Buttons.show_all_squads, Buttons.back)
+
+def send_message(message, text, reply_markup = None):
+    bot.send_message(message.chat.id, text, reply_markup = reply_markup, parse_mode='Markdown')
+
+def show_timetable(message):
+    if timetable != '':
+        photo = open(timetable, 'rb')
+        bot.send_photo(message.chat.id, photo)
+    else:
+        send_message(message, 'Расписание не добавлено')
+
+def show_services(message):
+    services_info = sbor.get_services_info()
+    send_message(message, services_info)
+
+def show_squads(message):
+    squads_info = sbor.get_squads_info()
+    send_message(message, squads_info)
+
+def show_squad(message, squad_id):
+    squad = sbor.get_squad(squad_id)
+    squad_info = sbor.get_squad_info_with_people(squad)
+    send_message(message, squad_info)
+
+def show_duties(message):
+    duties_info = sbor.get_duties_info()
+    send_message(message, duties_info)
 
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    global markup, best_people
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
-    button_1 = types.KeyboardButton('Расписание')
-    button_2 = types.KeyboardButton('ДКС')
-    button_3 = types.KeyboardButton('Добавить')
-    button_4 = types.KeyboardButton('Отряд 1')
-    button_5 = types.KeyboardButton('Отряд 2')
-    button_6 = types.KeyboardButton('Отряд 3')
-    button_7 = types.KeyboardButton('Отряд 4')
-    button_8 = types.KeyboardButton('Службисты')
+    global best_people
     if message.from_user.username in best_people:
-        markup.add(button_1, button_2, button_3, button_4, button_5, button_6, button_7, button_8)
-    else:
-        markup.add(button_1, button_2, button_4, button_5, button_6, button_7, button_8)
-    bot.send_message(message.chat.id, 'Привет', reply_markup=markup)
+        Markup.main.add(Buttons.edit)
+
+    send_message(message, 'Привет', reply_markup=Markup.main)
 
 
 @bot.message_handler(content_types=['text'])
 def take_text(message):
-    global timetable_button_clicked, dks_button_clicked, dks, markup, group, best_people, servisemans_button_clicked
+    global timetable_buttons_clicked, markup, best_people
     if message.text == 'Расписание':
-        if timetable != '':
-            photo = open(timetable, 'rb')
-            bot.send_photo(message.chat.id, photo)
-        else:
-            bot.send_message(message.chat.id, 'Расписание не добавлено')
+        show_timetable(message)
     elif message.text == 'Службисты':
-        if list_of_servicemans != '':
-            photo = open(list_of_servicemans, 'rb')
-            bot.send_photo(message.chat.id, photo)
-        else:
-            bot.send_message(message.chat.id, 'Список службистов не добавлен')
-    elif message.text == 'ДКС':
-        if dks != '':
-            bot.send_message(message.chat.id, dks)
-        else:
-            bot.send_message(message.chat.id, 'ДКС не добавлен')
-    elif message.text == 'Добавить':
-        local_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-        button_1 = types.KeyboardButton('Добавить расписание')
-        button_2 = types.KeyboardButton('Добавить список службистов')
-        button_3 = types.KeyboardButton('Добавить ДКС')
-        button_4 = types.KeyboardButton('Назад')
-        local_markup.add(button_1, button_2, button_3, button_4)
-        bot.send_message(message.chat.id, message.text, reply_markup=local_markup)
-    elif message.text == 'Добавить расписание':
-        bot.send_message(message.chat.id, 'Отправьте фото расписания)')
-        timetable_button_clicked = True
-    elif message.text == 'Добавить список службистов':
-        bot.send_message(message.chat.id, 'Отправьте фото списка службистов')
-        servisemans_button_clicked = True
-    elif message.text == 'Добавить ДКС':
-        bot.send_message(message.chat.id, 'Введите имя')
-        dks_button_clicked = True
-    elif message.text == 'Добавить Службистов':
-        bot.send_message(message.chat.id, 'Отправьте список службистов')
-        servisemans_button_clicked = True
-    elif message.text[:-1] == 'Отряд ':
-        group = int(message.text[-1:])
-        local_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
-        button_1 = types.KeyboardButton('Список отряда')
-        button_2 = types.KeyboardButton('Комсорг')
-        button_2 = types.KeyboardButton('ДКО')
-        button_3 = types.KeyboardButton('Назад')
-        local_markup.add(button_1, button_2, button_3)
-        bot.send_message(message.chat.id, message.text, reply_markup=local_markup)
+        show_services(message)
+    elif message.text == 'ДКС и ДКО':
+        show_duties(message)
+
+    elif message.text == 'Отряды':
+        send_message(message, message.text, reply_markup=Markup.squads)
+    elif message.text.split()[0] == 'Отряд':
+        squad = int(message.text[-1:])
+        show_squad(message, squad)
+    elif message.text == 'Все отряды':
+        show_squads(message)
+
+    elif message.text == 'Изменить':
+        send_message(message, message.text, reply_markup=Markup.edit)
+    elif message.text == 'Изменить расписание':
+        send_message(message, 'Отправьте фото расписания)')
+        timetable_buttons_clicked = True
+    elif message.text == 'Изменить ДКС и ДКО':
+        send_message(message, 'Пока не доступно')
+
     elif message.text == 'Назад':
-        bot.send_message(message.chat.id, message.text, reply_markup=markup)
-        group = 0
-        timetable_button_clicked = False
-        dks_button_clicked = False
-    elif message.text == 'Список отряда':
-        if group != 0:
-            timetable_of_group = open('resource/timetable_' + str(group) + '.png', 'rb')
-            bot.send_photo(message.chat.id, timetable_of_group)
-    elif message.text == 'Комсорг':
-        if group != 0:
-            bot.send_message(message.chat.id, 'Комсорг отряда ' + str(group))
-    elif message.text == 'ДКО':
-        if group != 0:
-            bot.send_message(message.chat.id, 'ДКО отряда ' + str(group))
-    elif dks_button_clicked and message.from_user.username in best_people:
-        dks = message.text
-        dks_button_clicked = False
+        send_message(message, message.text, reply_markup=Markup.main)
+        timetable_buttons_clicked = False
 
 
 @bot.message_handler(content_types=['photo'])
 def take_photo(message):
-    global timetable, timetable_button_clicked, servisemans_button_clicked, list_of_servicemans
-    if timetable_button_clicked:
+    global timetable, timetable_buttons_clicked
+    if timetable_buttons_clicked:
         file = bot.get_file(message.photo[-1].file_id)
         downloaded_file = bot.download_file(file.file_path)
         timetable = 'resource/timetable.png'
         with open('resource/timetable.png', 'wb') as new_file:
             new_file.write(downloaded_file)
-        timetable_button_clicked = False
-    elif servisemans_button_clicked:
-        file = bot.get_file(message.photo[-1].file_id)
-        downloaded_file = bot.download_file(file.file_path)
-        list_of_servicemans = 'resource/servicemans.png'
-        with open('resource/servicemans.png', 'wb') as new_file:
-            new_file.write(downloaded_file)
-        servisemans_button_clicked = False
+        timetable_buttons_clicked = False
 
 
 bot.polling(none_stop=True)
