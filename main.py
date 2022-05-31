@@ -277,7 +277,7 @@ def people_sort_callback(call):
     if keyword == 'id':
         edit_menu(call.message, text = sbor.get_all_people_info(Person.Sort.id, info), reply_markup = Markup.People.sort(call.from_user))
     elif keyword == 'name':
-        edit_menu(call.message, text = sbor.get_all_people_info(Person.Sort.name, info), reply_markup = Markup.People.sort(call.from_user))
+        edit_menu(call.message, text = sbor.get_all_people_info(Person.Sort.name, info, name_first = True), reply_markup = Markup.People.sort(call.from_user))
     elif keyword == 'surname':
         edit_menu(call.message, text = sbor.get_all_people_info(Person.Sort.surname, info), reply_markup = Markup.People.sort(call.from_user))
     bot.answer_callback_query(call.id)
@@ -313,34 +313,19 @@ def edit_commanders(message):
 
     id_strings = message.text.split()
 
-    if len(id_strings) != (sbor.get_squads_count() + 1):
-        send_message(message, 'Нужно передать {} ID новых ДКО. Вы передали {}. Выход из режима изменения ДКО.'.format(sbor.get_squads_count() + 1, len(id_strings)))
-        return
-
     ids = []
     for id_string in id_strings:
         id = int(id_string)
-        if id <= 0 or id > sbor.get_people_count():
-            send_message(message, 'ID должен быть числом больше 0 и меньше {}. Выход из режима изменения ДКС и ДКО.'.format(sbor.get_people_count()))
+        if not id:
+            send_message(message, 'Вы должны передать ID командиров. Выход из режима изменения ДКС и ДКО.'.format(sbor.get_people_count()))
             return
         ids.append(id)
 
-    if len(ids) > len(set(ids)):
-        send_message(message, 'ID не должны повторяться. Выход из режима изменения ДКС и ДКО.')
-        return
-
-    unique_squad = set()
-    for id in ids[1:]:
-        squad_id = sbor.get_person(id).squad_id
-        if squad_id in unique_squad:
-            send_message(message, '{}\n\nДКО должны быть из разных отрядов. Выход из режима изменения ДКС и ДКО.'.format(sbor.get_people_info_by_ids(ids[1:], Person.Info.Debug)))
-            return
-        unique_squad.add(squad_id)
-
-    if sbor.edit_commanders(ids[0], ids[1:]):
+    result, error = sbor.edit_commanders(ids[0], ids[1:])
+    if result:
         send_message(message, '{}\n\n*Информация верна?*'.format(sbor.get_duties_info(Person.Info.Debug)), reply_markup = Markup.Edit.commander_confirm)
     else:
-        send_message(message, '*Незивестная ошибка!*')
+        send_message(message, error + ' Выход из режима изменения ДКС и ДКО.')
 
 
 bot.polling(none_stop=True)

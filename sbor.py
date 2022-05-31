@@ -73,7 +73,7 @@ class Sbor:
         else:
             return '{}{:01}{}'.format(left_bracket, index, right_bracket)
 
-    def get_person_info(self, person, info = Person.Info.Compact):
+    def get_person_info(self, person, info = Person.Info.Compact, name_first = False):
         id = None
         squad_id = None
         phone_number = None
@@ -84,7 +84,7 @@ class Sbor:
             squad_id = person.squad_id
             phone_number = person.get_phone_number()
 
-        person_info = person.get_full_name()
+        person_info = person.get_full_name(name_first)
         if phone_number:
             person_info += ' ' + phone_number
         if squad_id:
@@ -157,13 +157,13 @@ class Sbor:
 
         return self.get_people_info(people, info)
 
-    def get_people_info(self, people, info = Person.Info.Compact):
+    def get_people_info(self, people, info = Person.Info.Compact, name_first = False):
         people_info = ''
         index = 1
         for person in people:
             people_info += '\n' if people_info else ''
             people_index = self.get_person_info_index(index, len(people), info, '`[', ']` ')
-            people_info += people_index + self.get_person_info(person, info)
+            people_info += people_index + self.get_person_info(person, info, name_first)
             index += 1
         return people_info
 
@@ -173,31 +173,34 @@ class Sbor:
             grouped_people[index] = self.get_people(groupby(index), sort)
         return grouped_people
 
-    def get_all_people_info(self, sort, info = Person.Info.Compact):
+    def get_all_people_info(self, sort, info = Person.Info.Compact, name_first = False):
         people = list(self.__people)
         people.sort(key = sort)
-        return '*Список участников*\n' + self.get_people_info(people, info)
+        return '*Список участников*\n' + self.get_people_info(people, info, name_first)
 
     def edit_commanders(self, new_main_commander_id, new_commanders_ids):
-        if len(new_commanders_ids) != self.get_squads_count():
-            return False
+        if not new_main_commander_id or len(new_commanders_ids) != self.get_squads_count():
+            return False , "Нужно передать 1 ДКС и {} ДКО. Вы передали {} ДКС и {} ДКО.".format(self.get_squads_count(), 1 if new_main_commander_id else 0, len(new_commanders_ids))
 
         def in_range(id):
             return id > 0 and id <= self.get_people_count()
 
         if(not in_range(new_main_commander_id)):
-            return False
+            return False, "ID должен быть числом больше 0 и меньше {}.".format(self.get_people_count() + 1)
 
         squads_with_new_commanders = {}
         unique_commanders = set()
         unique_commanders.add(new_main_commander_id)
         for new_commander_id in new_commanders_ids:
             if(not in_range(new_commander_id)):
-                return False
+                return False, "ID должен быть числом больше 0 и меньше {}.".format(self.get_people_count() + 1)
 
             new_commander_squad = self.get_person(new_commander_id).squad_id
-            if new_commander_squad in squads_with_new_commanders or new_commander_id in unique_commanders:
-                return False
+            if new_commander_id in unique_commanders:
+                return False, "ID не должны повторяться."
+            if new_commander_squad in squads_with_new_commanders:
+                return False, "{}\n\nДКО должны быть членами разных отрядов!".format(self.get_people_info_by_ids(new_commanders_ids, Person.Info.Debug))
+
             squads_with_new_commanders[new_commander_squad] = new_commander_id
             unique_commanders.add(new_commander_id)
 
@@ -207,7 +210,7 @@ class Sbor:
             else:
                 self.__duties[i].commander_id = new_main_commander_id
 
-        return True
+        return True, ""
 
 
     def save(self):

@@ -11,8 +11,8 @@ class Person:
         self.squad_id = squad_id
         self.role_id = role_id
 
-    def get_full_name(self):
-        return self.surname + ' ' + self.name
+    def get_full_name(self, name_first = False):
+        return self.name + ' ' + self.surname if name_first else self.surname + ' ' + self.name
 
     def get_phone_number(self):
         if not self.phone_number:
