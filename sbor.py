@@ -65,28 +65,32 @@ class Sbor:
         return  self.get_squad_info_full(squad) + '\n\n'\
                 '*Состав*\n' + self.get_people_info(people)
 
-    def get_person_info_index(self, index, people_count, info):
+    def get_person_info_index(self, index, people_count, info, left_bracket = '', right_bracket = ')'):
         if people_count > 99:
-            return '`[{:03}]` '.format(index)
+            return '{}{:03}{}'.format(left_bracket, index, right_bracket)
         elif people_count > 9:
-            return '`[{:02}]` '.format(index)
+            return '{}{:02}{}'.format(left_bracket, index, right_bracket)
         else:
-            return '`[{:01}]` '.format(index)
+            return '{}{:01}{}'.format(left_bracket, index, right_bracket)
 
     def get_person_info(self, person, info = Person.Info.Compact):
         id = None
+        squad_id = None
         phone_number = None
         if info == Person.Info.Full:
             phone_number = person.get_phone_number()
         elif info == Person.Info.Debug:
-            phone_number = person.get_phone_number()
             id = person.id
+            squad_id = person.squad_id
+            phone_number = person.get_phone_number()
 
         person_info = person.get_full_name()
         if phone_number:
             person_info += ' ' + phone_number
+        if squad_id:
+            person_info = self.get_person_info_index(squad_id, self.get_squads_count(), info, '`(o', ')` ') + person_info
         if id:
-            person_info = self.get_person_info_index(id, self.get_people_count(), info) + person_info
+            person_info = self.get_person_info_index(id, self.get_people_count(), info, '`<i', '>` ') + person_info
         return person_info
 
     def get_service_info(self, service):
@@ -104,7 +108,7 @@ class Sbor:
         return squad_duties[0]
 
     def get_people(self, people_filter, people_sort):
-        result = list(filter(people_filter, self.__people))
+        result = list(filter(people_filter, list(self.__people)))
         result.sort(key = people_sort)
         return result
 
@@ -146,12 +150,19 @@ class Sbor:
             duties_info += self.get_duty_info(duty, info)
         return duties_info
 
+    def get_people_info_by_ids(self, people_ids, info = Person.Info.Compact):
+        people = []
+        for id in people_ids:
+            people.append(self.get_person(id))
+
+        return self.get_people_info(people, info)
+
     def get_people_info(self, people, info = Person.Info.Compact):
         people_info = ''
         index = 1
         for person in people:
             people_info += '\n' if people_info else ''
-            people_index = self.get_person_info_index(index, len(people), info)
+            people_index = self.get_person_info_index(index, len(people), info, '`[', ']` ')
             people_info += people_index + self.get_person_info(person, info)
             index += 1
         return people_info
@@ -163,7 +174,7 @@ class Sbor:
         return grouped_people
 
     def get_all_people_info(self, sort, info = Person.Info.Compact):
-        people = self.__people
+        people = list(self.__people)
         people.sort(key = sort)
         return '*Список участников*\n' + self.get_people_info(people, info)
 

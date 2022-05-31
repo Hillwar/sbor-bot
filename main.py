@@ -213,7 +213,6 @@ def edit_callback(call):
     if keyword == 'timetable':
         message = edit_menu(call.message, 'Отправьте фото расписания)')
         bot.register_next_step_handler(message, edit_timetable)
-        bot.register_ca
     elif keyword == 'commanders':
         message = edit_menu(call.message, 'Отправьте ID ДКС и всех ДКО через пробел. ДКС обязательно первым!')
         bot.register_next_step_handler(message, edit_commanders)
@@ -225,10 +224,10 @@ def edit_callback(call):
 def edit_callback(call):
     keyword = call.data.split()[1]
     if keyword == 'yes':
-        edit_message(call.message, 'Информация сохранена!')
+        edit_message(call.message, '{}\n\n*Информация сохранена!*'.format(sbor.get_duties_info(Person.Info.Debug)))
         sbor.save()
     elif keyword == 'no':
-        edit_message(call.message, 'Информация не сохранена')
+        edit_message(call.message, '{}\n\n*Информация не сохранена*'.format(sbor.get_duties_info(Person.Info.Debug)))
         sbor.load()
     bot.answer_callback_query(call.id)
 
@@ -330,8 +329,18 @@ def edit_commanders(message):
         send_message(message, 'ID не должны повторяться. Выход из режима изменения ДКС и ДКО.')
         return
 
-    sbor.edit_commanders(ids[0], ids[1:])
-    send_message(message, '{}\n\n*Информация верна?*'.format(sbor.get_duties_info(Person.Info.Debug)), reply_markup = Markup.Edit.commander_confirm)
+    unique_squad = set()
+    for id in ids[1:]:
+        squad_id = sbor.get_person(id).squad_id
+        if squad_id in unique_squad:
+            send_message(message, '{}\n\nДКО должны быть из разных отрядов. Выход из режима изменения ДКС и ДКО.'.format(sbor.get_people_info_by_ids(ids[1:], Person.Info.Debug)))
+            return
+        unique_squad.add(squad_id)
+
+    if sbor.edit_commanders(ids[0], ids[1:]):
+        send_message(message, '{}\n\n*Информация верна?*'.format(sbor.get_duties_info(Person.Info.Debug)), reply_markup = Markup.Edit.commander_confirm)
+    else:
+        send_message(message, '*Незивестная ошибка!*')
 
 
 bot.polling(none_stop=True)
