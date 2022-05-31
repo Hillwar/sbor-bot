@@ -1,17 +1,17 @@
 
+from re import L
 import string
 from people import Service, Person, PersonRole, Squad, Duty
 
+def get_cell_value(sheet, col, row):
+    value = sheet.cell(row = row, column = col).value
+    return value
+
+def set_cell_value(sheet, col, row, value):
+    sheet.cell(row = row, column = col, value = value)
 
 def parse(workbook):
     first_row = 3
-
-    def get_cell_value(sheet, col, row):
-        value = sheet.cell(row = row, column = col).value
-        if not value:
-            return value
-
-        return value
 
     def parse_people(sheet):
         people = []
@@ -114,3 +114,30 @@ def parse(workbook):
     roles = parse_roles(workbook.get_sheet_by_name('Roles'))
 
     return people, squads, duties, services, roles
+
+
+def save(workbook, path, duties):
+    first_row = 3
+
+    def save_duties(sheet, duties):
+        commander_id_col = 2
+        commander_squad_id_col = 3
+        row = first_row
+
+        while get_cell_value(sheet, commander_id_col, row):
+            commander_squad_id = get_cell_value(sheet, commander_squad_id_col, row)
+            commander_saved = False
+            for duty in duties:
+                if commander_squad_id == duty.commander_squad_id:
+                    set_cell_value(sheet, commander_id_col, row, duty.commander_id)
+                    commander_saved = True
+                    break
+
+            if not commander_saved:
+                raise Exception("Can't save all commanders")
+
+            row += 1
+
+
+    save_duties(workbook.get_sheet_by_name('Duty'), duties)
+    workbook.save(path)

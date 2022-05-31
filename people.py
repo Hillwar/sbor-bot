@@ -1,5 +1,7 @@
 import enum
 
+
+
 class Person:
     def __init__(self, id, name, surname, phone_number, squad_id, role_id):
         self.id = id
@@ -17,6 +19,20 @@ class Person:
             return None
 
         return '+7' + str(self.phone_number)
+
+    class Sort:
+        def id(people): return people.id
+        def name(people): return people.name
+        def surname(people): return people.surname
+
+    class Filter:
+        def squad_id(squad_id): return lambda person: person.squad_id == squad_id
+        def role_id(role_id): return lambda person: person.role_id == role_id
+
+    class Info(enum.Enum):
+        Compact = 1
+        Full = 2
+        Debug = 3
 
 class Squad:
     def __init__(self, id, name, vozhatiy_id, komsorg_id):
