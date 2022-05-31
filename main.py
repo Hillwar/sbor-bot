@@ -321,7 +321,7 @@ def edit_commanders(message):
     ids = []
     for id_string in id_strings:
         id = int(id_string)
-        if id <= 0 or id >= sbor.get_people_count():
+        if id <= 0 or id > sbor.get_people_count():
             send_message(message, 'ID должен быть числом больше 0 и меньше {}. Выход из режима изменения ДКС и ДКО.'.format(sbor.get_people_count()))
             return
         ids.append(id)

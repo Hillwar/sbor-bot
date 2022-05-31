@@ -172,7 +172,7 @@ class Sbor:
             return False
 
         def in_range(id):
-            return id > 0 and id < self.get_people_count()
+            return id > 0 and id <= self.get_people_count()
 
         if(not in_range(new_main_commander_id)):
             return False
