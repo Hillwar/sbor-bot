@@ -202,7 +202,7 @@ def take_text(message):
 def other_callback(call):
     keyword = call.data.split()[1]
     if keyword == 'search':
-        edit_menu(call.message, text = 'Пока не доступно')
+        edit_menu(call.message, text = 'Кнопка \'Поиск человека\' пока не доступна')
     elif keyword == 'edit':
         bot.edit_message_reply_markup(chat_id = call.message.chat.id,message_id = call.message.message_id, reply_markup = Markup.Edit.show)
     bot.answer_callback_query(call.id)
@@ -218,7 +218,7 @@ def edit_callback(call):
         message = edit_menu(call.message, 'Отправьте ID ДКС и всех ДКО через пробел. ДКС обязательно первым!')
         bot.register_next_step_handler(message, edit_commanders)
     elif keyword == 'admins':
-        send_message(call.message, 'Пока не доступно')
+        edit_menu(call.message, 'Кнопка \'Изменить админов\' пока не доступна', reply_markup = Markup.Edit.show)
     bot.answer_callback_query(call.id)
 
 @bot.callback_query_handler(func = lambda call: call.data.split()[0] == 'edit_commanders', is_admin = True)
@@ -236,9 +236,9 @@ def edit_callback(call):
 def timetable_callback(call):
     keyword = call.data.split()[1]
     if keyword == 'today':
-        send_message(call.message, 'Пока не доступно')
+        edit_menu(call.message, 'Кнопка \'Расписание на сегодня\' пока не доступна', reply_markup = Markup.Timetable.show)
     elif keyword == 'sbor':
-        send_message(call.message, 'Пока не доступно')
+        edit_menu(call.message, 'Кнопка \'Расписание на сбор\' пока не доступна', reply_markup = Markup.Timetable.show)
     bot.answer_callback_query(call.id)
 
 @bot.callback_query_handler(func = lambda call: call.data.split()[0] == 'squads')
