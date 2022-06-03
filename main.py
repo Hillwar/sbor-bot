@@ -168,7 +168,7 @@ def show_duties(message):
     send_message(message, photo_path = Resources.Images.background_5, text = duties_info)
 
 def show_people(message):
-    info = Person.Info.Full if is_admin(message.from_user) else Person.Info.Compact
+    info = Person.Info.Compact
     send_message(message, text = sbor.get_all_people_info(Person.Sort.surname, info), reply_markup = Markup.People.show)
 
 def show_other(message):
@@ -281,7 +281,7 @@ def people_callback(call):
 @bot.callback_query_handler(func = lambda call: call.data.split()[0] == 'people_sort')
 def people_sort_callback(call):
     keyword = call.data.split()[1]
-    info = Person.Info.Full if is_admin(call.from_user) else Person.Info.Compact
+    info = Person.Info.Compact
     if keyword == 'id':
         edit_message(call.message, text = sbor.get_all_people_info(Person.Sort.id, info), reply_markup = Markup.People.sort(call.from_user))
     elif keyword == 'name':

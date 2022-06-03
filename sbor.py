@@ -73,16 +73,16 @@ class Sbor:
         else:
             return '{}{:01}{}'.format(left_bracket, index, right_bracket)
 
-    def get_person_info(self, person, info = Person.Info.Compact, name_first = False):
+    def get_person_info(self, person, info = Person.Info.Compact, index = None, name_first = False):
         id = None
         squad_id = None
         phone_number = None
         if info == Person.Info.Full:
             phone_number = person.get_phone_number()
         elif info == Person.Info.Debug:
+            index = None
             id = person.id
             squad_id = person.squad_id
-            phone_number = person.get_phone_number()
 
         person_info = person.get_full_name(name_first)
         if phone_number:
@@ -91,6 +91,8 @@ class Sbor:
             person_info = self.get_person_info_index(squad_id, self.get_squads_count(), info, '`(o', ')` ') + person_info
         if id:
             person_info = self.get_person_info_index(id, self.get_people_count(), info, '`<i', '>` ') + person_info
+        if index:
+            person_info = self.get_person_info_index(index, self.get_people_count(), info, '`[', ']` ') + person_info
         return person_info
 
     def get_service_info(self, service):
@@ -162,8 +164,7 @@ class Sbor:
         index = 1
         for person in people:
             people_info += '\n' if people_info else ''
-            people_index = self.get_person_info_index(index, len(people), info, '`[', ']` ')
-            people_info += people_index + self.get_person_info(person, info, name_first)
+            people_info += self.get_person_info(person, index = index, info = info, name_first = name_first)
             index += 1
         return people_info
 
