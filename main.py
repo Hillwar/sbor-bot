@@ -158,10 +158,10 @@ def show_timetable(message):
 
 def show_services(message):
     services_info = sbor.get_services_info()
-    send_message(message, photo_path = Resources.Images.background_1,  text = services_info)
+    send_message(message, photo_path = Resources.Images.background_3,  text = services_info)
 
 def show_squads(message):
-    send_message(message, photo_path = Resources.Images.background_2, reply_markup = Markup.Squads.show)
+    send_message(message, photo_path = Resources.Images.background_1, reply_markup = Markup.Squads.show)
 
 def show_duties(message):
     duties_info = sbor.get_duties_info()
