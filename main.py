@@ -54,8 +54,8 @@ class Buttons:
             no = types.InlineKeyboardButton(text = 'Нет', callback_data = 'edit_commanders no')
 
     class Timetable:
-        today = types.InlineKeyboardButton(text = 'Расписание на сегодня', callback_data = 'timetable today')
-        sbor = types.InlineKeyboardButton(text = 'Расписание на сбор', callback_data = 'timetable sbor')
+        today = types.InlineKeyboardButton(text = 'Показать расписание на сегодня', callback_data = 'timetable today')
+        sbor = types.InlineKeyboardButton(text = 'Показать расписание на сбор', callback_data = 'timetable sbor')
 
     class Squads:
         all = types.InlineKeyboardButton(text = 'Все отряды', callback_data = 'squads show_squads')
@@ -102,8 +102,11 @@ class Markup:
         commander_confirm.add(Buttons.Edit.Commanders.yes, Buttons.Edit.Commanders.no)
 
     class Timetable:
-        show = types.InlineKeyboardMarkup(row_width = 1)
-        show.add(Buttons.Timetable.today, Buttons.Timetable.sbor)
+        today = types.InlineKeyboardMarkup(row_width = 1)
+        today.add(Buttons.Timetable.today)
+
+        sbor = types.InlineKeyboardMarkup(row_width = 1)
+        sbor.add(Buttons.Timetable.sbor)
 
     class Squads:
         show = types.InlineKeyboardMarkup(row_width = 1)
@@ -128,51 +131,56 @@ class Markup:
             markup.add(Buttons.People.Sort.by_name, Buttons.People.Sort.by_surname, Buttons.People.back)
             return markup
 
-def send_message(message, text = None, reply_markup = None):
-    return bot.send_message(message.chat.id, text = text, reply_markup = reply_markup, parse_mode='Markdown')
+def send_message(message, photo_path = None, text = None, reply_markup = None):
+    if photo_path:
+        photo = open(photo_path, 'rb')
+        return bot.send_photo(message.chat.id, photo=photo, caption=text, reply_markup = reply_markup, parse_mode='Markdown')
+    else:
+        return bot.send_message(message.chat.id, text = text, reply_markup = reply_markup, parse_mode='Markdown')
 
 def edit_message(message, text = None, reply_markup = None):
-    return bot.edit_message_text(chat_id = message.chat.id, message_id = message.message_id, text = text, reply_markup = reply_markup, parse_mode='Markdown')
+    if message.photo:
+        return bot.edit_message_caption(chat_id = message.chat.id, message_id = message.message_id, caption = text, reply_markup = reply_markup, parse_mode='Markdown')
+    else:
+        return bot.edit_message_text(chat_id = message.chat.id, message_id = message.message_id, text = text, reply_markup = reply_markup, parse_mode='Markdown')
 
-def send_menu(message, photo_path = Resources.Images.background, text = None, reply_markup = None):
-    main_background = open(photo_path, 'rb')
-    if not main_background:
-        return
-
-    return bot.send_photo(message.chat.id, photo=main_background, caption=text, reply_markup = reply_markup, parse_mode='Markdown')
-
-def edit_menu(message, text = None, reply_markup = None):
-    return bot.edit_message_caption(chat_id = message.chat.id, message_id = message.message_id, caption = text, reply_markup = reply_markup, parse_mode='Markdown')
+def edit_photo(message, photo_path, reply_markup = None):
+    if message.photo:
+        photo = open(photo_path, 'rb')
+        media = types.InputMediaPhoto(photo)
+        return bot.edit_message_media(media = media, chat_id = message.chat.id, message_id = message.message_id, reply_markup = reply_markup)
+    else:
+        return bot.edit_message_text(chat_id = message.chat.id, message_id = message.message_id, text = 'ОШИБКА! У этого сообщения нет фото, которое можно изменить', reply_markup = None, parse_mode='Markdown')
 
 
 def show_timetable(message):
-    send_menu(message, photo_path = Resources.Timetable.today, reply_markup = Markup.Timetable.show)
+    send_message(message, photo_path = Resources.Timetable.today, reply_markup = Markup.Timetable.sbor)
 
 def show_services(message):
     services_info = sbor.get_services_info()
-    send_message(message, text = services_info)
+    send_message(message, photo_path = Resources.Images.background_1,  text = services_info)
 
 def show_squads(message):
-    send_menu(message, reply_markup = Markup.Squads.show)
+    send_message(message, photo_path = Resources.Images.background_2, reply_markup = Markup.Squads.show)
 
 def show_duties(message):
     duties_info = sbor.get_duties_info()
-    send_message(message, text = duties_info)
+    send_message(message, photo_path = Resources.Images.background_5, text = duties_info)
 
 def show_people(message):
     info = Person.Info.Full if is_admin(message.from_user) else Person.Info.Compact
-    send_menu(message, text = sbor.get_all_people_info(Person.Sort.surname, info), reply_markup = Markup.People.show)
+    send_message(message, text = sbor.get_all_people_info(Person.Sort.surname, info), reply_markup = Markup.People.show)
 
 def show_other(message):
-    send_menu(message, reply_markup = Markup.Other.show(message.from_user))
+    send_message(message, photo_path = Resources.Images.background_4, reply_markup = Markup.Other.show(message.from_user))
 
 def show_edit(message):
-    send_menu(message, reply_markup=Markup.Edit.show)
+    send_message(message, photo_path = Resources.Images.background_4, reply_markup=Markup.Edit.show)
 
 
 @bot.message_handler(commands=['start'])
 def start_command(message):
-    send_message(message, 'Привет!', reply_markup = Markup.Main.show)
+    send_message(message, text = 'Привет!', reply_markup = Markup.Main.show)
 
 @bot.message_handler(commands=['restart'])
 def restart_command(message):
@@ -202,7 +210,7 @@ def take_text(message):
 def other_callback(call):
     keyword = call.data.split()[1]
     if keyword == 'search':
-        edit_menu(call.message, text = 'Кнопка \'Поиск человека\' пока не доступна')
+        edit_message(call.message, text = 'Кнопка \'Поиск человека\' пока не доступна')
     elif keyword == 'edit':
         bot.edit_message_reply_markup(chat_id = call.message.chat.id,message_id = call.message.message_id, reply_markup = Markup.Edit.show)
     bot.answer_callback_query(call.id)
@@ -211,13 +219,13 @@ def other_callback(call):
 def edit_callback(call):
     keyword = call.data.split()[1]
     if keyword == 'timetable':
-        message = edit_menu(call.message, 'Отправьте фото расписания)')
+        message = edit_message(call.message, 'Отправьте фото расписания)')
         bot.register_next_step_handler(message, edit_timetable)
     elif keyword == 'commanders':
-        message = edit_menu(call.message, 'Отправьте ID ДКС и всех ДКО через пробел. ДКС обязательно первым!')
+        message = edit_message(call.message, 'Отправьте ID ДКС и всех ДКО через пробел. ДКС обязательно первым!')
         bot.register_next_step_handler(message, edit_commanders)
     elif keyword == 'admins':
-        edit_menu(call.message, 'Кнопка \'Изменить админов\' пока не доступна', reply_markup = Markup.Edit.show)
+        edit_message(call.message, 'Кнопка \'Изменить админов\' пока не доступна', reply_markup = Markup.Edit.show)
     bot.answer_callback_query(call.id)
 
 @bot.callback_query_handler(func = lambda call: call.data.split()[0] == 'edit_commanders', is_admin = True)
@@ -235,9 +243,9 @@ def edit_callback(call):
 def timetable_callback(call):
     keyword = call.data.split()[1]
     if keyword == 'today':
-        edit_menu(call.message, 'Кнопка \'Расписание на сегодня\' пока не доступна', reply_markup = Markup.Timetable.show)
+        edit_photo(call.message, photo_path = Resources.Timetable.today, reply_markup = Markup.Timetable.sbor)
     elif keyword == 'sbor':
-        edit_menu(call.message, 'Кнопка \'Расписание на сбор\' пока не доступна', reply_markup = Markup.Timetable.show)
+        edit_photo(call.message, photo_path = Resources.Timetable.sbor, reply_markup = Markup.Timetable.today)
     bot.answer_callback_query(call.id)
 
 @bot.callback_query_handler(func = lambda call: call.data.split()[0] == 'squads')
@@ -247,10 +255,10 @@ def squads_callback(call):
         squad_id = int(call.data[-1:])
         squad = sbor.get_squad(squad_id)
         squad_info = sbor.get_squad_info_with_people(squad)
-        edit_menu(call.message, text = squad_info, reply_markup = Markup.Squads.show)
+        edit_message(call.message, text = squad_info, reply_markup = Markup.Squads.hide)
     elif keyword == 'show_squads':
         squads_info = sbor.get_squads_info()
-        edit_menu(call.message, text = squads_info, reply_markup = Markup.Squads.show)
+        edit_message(call.message, text = squads_info, reply_markup = Markup.Squads.hide)
     elif keyword == 'hide_buttons':
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup = Markup.Squads.hide)
     elif keyword == 'show_buttons':
@@ -275,11 +283,11 @@ def people_sort_callback(call):
     keyword = call.data.split()[1]
     info = Person.Info.Full if is_admin(call.from_user) else Person.Info.Compact
     if keyword == 'id':
-        edit_menu(call.message, text = sbor.get_all_people_info(Person.Sort.id, info), reply_markup = Markup.People.sort(call.from_user))
+        edit_message(call.message, text = sbor.get_all_people_info(Person.Sort.id, info), reply_markup = Markup.People.sort(call.from_user))
     elif keyword == 'name':
-        edit_menu(call.message, text = sbor.get_all_people_info(Person.Sort.name, info, name_first = True), reply_markup = Markup.People.sort(call.from_user))
+        edit_message(call.message, text = sbor.get_all_people_info(Person.Sort.name, info, name_first = True), reply_markup = Markup.People.sort(call.from_user))
     elif keyword == 'surname':
-        edit_menu(call.message, text = sbor.get_all_people_info(Person.Sort.surname, info), reply_markup = Markup.People.sort(call.from_user))
+        edit_message(call.message, text = sbor.get_all_people_info(Person.Sort.surname, info), reply_markup = Markup.People.sort(call.from_user))
     bot.answer_callback_query(call.id)
 
 @bot.callback_query_handler(func = lambda call: call.data.split()[0] == 'cancel')
@@ -301,14 +309,14 @@ def save_photo(message, path):
 def edit_timetable(message):
     result = save_photo(message, Resources.Timetable.today)
     if not result:
-        send_message(message, 'Это не фото расписания. Выход из режима изменения расписания.')
+        send_message(message, text = 'Это не фото расписания. Выход из режима изменения расписания.')
         return
 
-    send_message(message, 'Новое расписание сохранено!')
+    send_message(message, text = 'Новое расписание сохранено!')
 
 def edit_commanders(message):
     if not message.text:
-        send_message(message, 'Вы не передали ID новых коммандиров. Выход из режима изменения ДКС и ДКО.')
+        send_message(message, text = 'Вы не передали ID новых коммандиров. Выход из режима изменения ДКС и ДКО.')
         return
 
     id_strings = message.text.split()
@@ -317,15 +325,15 @@ def edit_commanders(message):
     for id_string in id_strings:
         id = int(id_string)
         if not id:
-            send_message(message, 'Вы должны передать ID командиров. Выход из режима изменения ДКС и ДКО.'.format(sbor.get_people_count()))
+            send_message(message, text = 'Вы должны передать ID командиров. Выход из режима изменения ДКС и ДКО.'.format(sbor.get_people_count()))
             return
         ids.append(id)
 
     result, error = sbor.edit_commanders(ids[0], ids[1:])
     if result:
-        send_message(message, '{}\n\n*Информация верна?*'.format(sbor.get_duties_info(Person.Info.Debug)), reply_markup = Markup.Edit.commander_confirm)
+        send_message(message, text = '{}\n\n*Информация верна?*'.format(sbor.get_duties_info(Person.Info.Debug)), reply_markup = Markup.Edit.commander_confirm)
     else:
-        send_message(message, error + ' Выход из режима изменения ДКС и ДКО.')
+        send_message(message, text = error + ' Выход из режима изменения ДКС и ДКО.')
 
 
 bot.polling(none_stop=True)

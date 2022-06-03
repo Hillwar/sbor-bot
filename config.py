@@ -15,7 +15,12 @@ class Resources:
         sbor = Paths.timetable + '/sbor.png'
 
     class Images:
-        background = Paths.images + '/background_main.png'
+        background_1 = Paths.images + '/background_1.jpg'
+        background_2 = Paths.images + '/background_2.jpg'
+        background_3 = Paths.images + '/background_3.jpg'
+        background_4 = Paths.images + '/background_4.jpg'
+        background_5 = Paths.images + '/background_5.jpg'
+        background_gay = Paths.images + '/background_gay_special.jpg'
 
     class Data:
         sbor = Paths.data + '/sbor_data.xlsx'
