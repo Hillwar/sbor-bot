@@ -96,6 +96,9 @@ class Sbor:
         return person_info
 
     def get_service_info(self, service):
+        if not service.supervisor_id:
+            return '*' + service.name + '*\n'+ 'Пока нет ответственного'
+
         supervisor = self.get_person(service.supervisor_id)
         return '*' + service.name + '*\n'+ self.get_person_info(supervisor, Person.Info.Full)
 
