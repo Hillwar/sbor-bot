@@ -5,14 +5,16 @@ import enum
 class Person:
     def __init__(self, id, name, surname, phone_number, squad_id, role_id):
         self.id = id
-        self.name = name
-        self.surname = surname
+        self.name = name.lower()
+        self.surname = surname.lower()
         self.phone_number = phone_number
         self.squad_id = squad_id
         self.role_id = role_id
 
     def get_full_name(self, name_first = False):
-        return self.name + ' ' + self.surname if name_first else self.surname + ' ' + self.name
+        name = self.name.capitalize()
+        surname = self.surname.capitalize()
+        return name + ' ' + surname if name_first else surname + ' ' + name
 
     def get_phone_number(self):
         if not self.phone_number:
@@ -26,6 +28,9 @@ class Person:
         def surname(people): return people.surname
 
     class Filter:
+        def id(id): return lambda person: person.id == id
+        def name(name): return lambda person: name in person.name
+        def surname(surname): return lambda person: surname in person.surname
         def squad_id(squad_id): return lambda person: person.squad_id == squad_id
         def role_id(role_id): return lambda person: person.role_id == role_id
 

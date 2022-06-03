@@ -49,10 +49,6 @@ class Buttons:
         commanders = types.InlineKeyboardButton(text = 'Изменить ДКС и ДКО', callback_data = 'edit commanders')
         admins = types.InlineKeyboardButton(text = 'Изменить админов', callback_data = 'edit admins')
 
-        class Commanders:
-            yes = types.InlineKeyboardButton(text = 'Да', callback_data = 'edit_commanders yes')
-            no = types.InlineKeyboardButton(text = 'Нет', callback_data = 'edit_commanders no')
-
     class Timetable:
         today = types.InlineKeyboardButton(text = 'Показать расписание на сегодня', callback_data = 'timetable today')
         sbor = types.InlineKeyboardButton(text = 'Показать расписание на сбор', callback_data = 'timetable sbor')
@@ -86,6 +82,16 @@ class Markup:
         show = types.ReplyKeyboardMarkup(resize_keyboard = True, row_width = 2)
         show.add(Buttons.Main.timetable, Buttons.Main.commanders, Buttons.Main.squads, Buttons.Main.services, Buttons.Main.people, Buttons.Main.other)
 
+    class Exit:
+        commander_edit_exit = types.ReplyKeyboardMarkup(resize_keyboard = True, row_width = 1)
+        commander_edit_exit.add(types.KeyboardButton(text = 'Выход из режима изменения ДКС и ДКО'))
+
+        people_search_exit = types.ReplyKeyboardMarkup(resize_keyboard = True, row_width = 1)
+        people_search_exit.add(types.KeyboardButton(text = 'Выход из режима поиска'))
+
+        timetable_edit_exit = types.ReplyKeyboardMarkup(resize_keyboard = True, row_width = 1)
+        timetable_edit_exit.add(types.KeyboardButton(text = 'Выход из режима изменения расписания'))
+
     class Other:
         def show(user):
             markup = types.InlineKeyboardMarkup(row_width = 1)
@@ -97,9 +103,6 @@ class Markup:
     class Edit:
         show = types.InlineKeyboardMarkup(row_width = 1)
         show.add(Buttons.Edit.timetable, Buttons.Edit.commanders, Buttons.Edit.admins, Buttons.General.cancel)
-
-        commander_confirm = types.InlineKeyboardMarkup(row_width = 2)
-        commander_confirm.add(Buttons.Edit.Commanders.yes, Buttons.Edit.Commanders.no)
 
     class Timetable:
         today = types.InlineKeyboardMarkup(row_width = 1)
@@ -210,7 +213,9 @@ def take_text(message):
 def other_callback(call):
     keyword = call.data.split()[1]
     if keyword == 'search':
-        edit_message(call.message, text = 'Кнопка \'Поиск человека\' пока не доступна')
+        bot.edit_message_reply_markup(chat_id = call.message.chat.id,message_id = call.message.message_id, reply_markup = None)
+        message = send_message(call.message, text = 'Введите имя и/или фамилию человека, которого хотите найти. *Лучше вводить только фамилию.*', reply_markup = Markup.Exit.people_search_exit)
+        bot.register_next_step_handler(message, find_people)
     elif keyword == 'edit':
         bot.edit_message_reply_markup(chat_id = call.message.chat.id,message_id = call.message.message_id, reply_markup = Markup.Edit.show)
     bot.answer_callback_query(call.id)
@@ -219,24 +224,16 @@ def other_callback(call):
 def edit_callback(call):
     keyword = call.data.split()[1]
     if keyword == 'timetable':
-        message = edit_message(call.message, 'Отправьте фото расписания)')
-        bot.register_next_step_handler(message, edit_timetable)
+        bot.edit_message_reply_markup(chat_id = call.message.chat.id, message_id = call.message.message_id, reply_markup = None)
+        message = send_message(call.message, text='Отправьте фото расписания)', reply_markup=Markup.Exit.timetable_edit_exit)
+        bot.register_next_step_handler(message, edit_timetable, )
     elif keyword == 'commanders':
-        message = edit_message(call.message, 'Отправьте ID ДКС и всех ДКО через пробел. ДКС обязательно первым!')
+        bot.edit_message_reply_markup(chat_id = call.message.chat.id, message_id = call.message.message_id, reply_markup = None)
+        message = send_message(call.message, text='Отправьте ID ДКС и всех ДКО через пробел. ДКС обязательно первым!', reply_markup=Markup.Exit.commander_edit_exit)
         bot.register_next_step_handler(message, edit_commanders)
     elif keyword == 'admins':
-        edit_message(call.message, 'Кнопка \'Изменить админов\' пока не доступна', reply_markup = Markup.Edit.show)
-    bot.answer_callback_query(call.id)
-
-@bot.callback_query_handler(func = lambda call: call.data.split()[0] == 'edit_commanders', is_admin = True)
-def edit_callback(call):
-    keyword = call.data.split()[1]
-    if keyword == 'yes':
-        edit_message(call.message, '{}\n\n*Информация сохранена!*'.format(sbor.get_duties_info(Person.Info.Debug)))
-        sbor.save()
-    elif keyword == 'no':
-        edit_message(call.message, '{}\n\n*Информация не сохранена*'.format(sbor.get_duties_info(Person.Info.Debug)))
-        sbor.load()
+        # bot.edit_message_reply_markup(chat_id = call.message.chat.id, message_id = call.message.message_id, reply_markup = None)
+        message = send_message(call.message, text='Кнопка \'Изменить админов\' пока не доступна', reply_markup=Markup.Exit.commander_edit_exit)
     bot.answer_callback_query(call.id)
 
 @bot.callback_query_handler(func = lambda call: call.data.split()[0] == 'timetable')
@@ -307,33 +304,83 @@ def save_photo(message, path):
     return True
 
 def edit_timetable(message):
-    result = save_photo(message, Resources.Timetable.today)
-    if not result:
-        send_message(message, text = 'Это не фото расписания. Выход из режима изменения расписания.')
+    if message.text and (message.text == 'Выход из режима изменения расписания' or message.text == 'Отмена'):
+        send_message(message, text = 'Отмена изменений', reply_markup = Markup.Main.show)
         return
 
-    send_message(message, text = 'Новое расписание сохранено!')
+    result = save_photo(message, Resources.Timetable.today)
+    if not result:
+        send_message(message, text = 'Вы не передали фото расписания. Повторите.', reply_markup=Markup.Exit.timetable_edit_exit)
+        bot.register_next_step_handler(message, edit_timetable)
+        return
+
+    send_message(message, text = 'Новое расписание сохранено!', reply_markup = Markup.Main.show)
 
 def edit_commanders(message):
     if not message.text:
-        send_message(message, text = 'Вы не передали ID новых коммандиров. Выход из режима изменения ДКС и ДКО.')
+        send_message(message, text = 'Вы не передали ID новых коммандиров. Повторите.', reply_markup=Markup.Exit.commander_edit_exit)
+        bot.register_next_step_handler(message, edit_commanders)
+        return
+
+    if message.text == 'Выход из режима изменения ДКС и ДКО' or message.text == 'Отмена':
+        send_message(message, text = 'Отмена изменений', reply_markup = Markup.Main.show)
         return
 
     id_strings = message.text.split()
 
     ids = []
     for id_string in id_strings:
-        id = int(id_string)
-        if not id:
-            send_message(message, text = 'Вы должны передать ID командиров. Выход из режима изменения ДКС и ДКО.'.format(sbor.get_people_count()))
+        if not id_string.isdigit():
+            send_message(message, text = 'Вы должны передать ID командиров. Повторите.'.format(sbor.get_people_count()))
+            bot.register_next_step_handler(message, edit_commanders)
             return
+        id = int(id_string)
         ids.append(id)
 
     result, error = sbor.edit_commanders(ids[0], ids[1:])
     if result:
-        send_message(message, text = '{}\n\n*Информация верна?*'.format(sbor.get_duties_info(Person.Info.Debug)), reply_markup = Markup.Edit.commander_confirm)
+        send_message(message, text = sbor.get_duties_info(), reply_markup = Markup.Main.show)
+        send_message(message, text = 'Информация сохранена!')
+        sbor.save()
     else:
-        send_message(message, text = error + ' Выход из режима изменения ДКС и ДКО.')
+        send_message(message, text = error + ' Повторите.')
+        bot.register_next_step_handler(message, edit_commanders)
 
+
+def find_people(message):
+    if not message.text:
+        send_message(message, text = 'Вы не передали данные для поиска человека. Нужно передать имя и/или фамилию человека. Повторите.', reply_markup = Markup.Exit.people_search_exit)
+        bot.register_next_step_handler(message, find_people)
+        return
+
+    if message.text == 'Выход из режима поиска' or message.text == 'Отмена':
+        send_message(message, text = 'Поиск закончен', reply_markup = Markup.Main.show)
+        return
+
+    keys = message.text.split()
+    if len(keys) > 2:
+        send_message(message, text = 'Передано слишком много аргументов. Нужно передать только имя и/или фамилию человека. Повторите.')
+        bot.register_next_step_handler(message, find_people)
+        return
+
+    for key in keys:
+        if key.isdigit():
+            if len(keys) == 1 and is_admin(message.from_user):
+                break
+            send_message(message, text = 'Вы передали числа. Нужно передать имя и/или фамилию человека. Повторите.')
+            bot.register_next_step_handler(message, find_people)
+            return
+
+    people = sbor.find_people(keys)
+    if not people:
+        send_message(message, text = 'Не найдено ни одного человека. Повторите.')
+        bot.register_next_step_handler(message, find_people)
+        return
+
+    info = Person.Info.Debug if is_admin(message.from_user) else Person.Info.Full
+    send_message(message, text = 'Вот кого я нашел', reply_markup = Markup.Exit.people_search_exit)
+    for person in people:
+        send_message(message, text = sbor.get_person_info(person, info))
+    bot.register_next_step_handler(message, find_people)
 
 bot.polling(none_stop=True)

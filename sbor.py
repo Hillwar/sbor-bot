@@ -47,18 +47,18 @@ class Sbor:
         separator_middle = '\n'
         separator_end = '\n\n'
         return  '*Отряд \'' + squad.name + '\'*' + separator_end + \
-                '*Вожатый*' + separator_middle + self.get_person_info(vozhatiy, Person.Info.Full) + separator_end + \
-                '*Комсорг*' + separator_middle + self.get_person_info(komsorg, Person.Info.Full) + separator_end + \
-                '*ДКО*' + separator_middle + self.get_person_info(commander, Person.Info.Full)
+                '*Вожатый*' + separator_middle + self.get_person_info_one_line(vozhatiy, Person.Info.Full) + separator_end + \
+                '*Комсорг*' + separator_middle + self.get_person_info_one_line(komsorg, Person.Info.Full) + separator_end + \
+                '*ДКО*' + separator_middle + self.get_person_info_one_line(commander, Person.Info.Full)
 
     def get_squad_info_compact(self, squad):
         vozhatiy, komsorg, commander = self.get_squad_info_people(squad)
         separator_middle = ' - '
         separator_end = '\n'
         return  '*Отряд \'' + squad.name + '\'*' + separator_end + \
-                'Вожатый' + separator_middle + self.get_person_info(vozhatiy, Person.Info.Compact) + separator_end + \
-                'Комсорг' + separator_middle + self.get_person_info(komsorg, Person.Info.Compact) + separator_end + \
-                'ДКО' + separator_middle + self.get_person_info(commander, Person.Info.Compact)
+                'Вожатый' + separator_middle + self.get_person_info_one_line(vozhatiy, Person.Info.Compact) + separator_end + \
+                'Комсорг' + separator_middle + self.get_person_info_one_line(komsorg, Person.Info.Compact) + separator_end + \
+                'ДКО' + separator_middle + self.get_person_info_one_line(commander, Person.Info.Compact)
 
     def get_squad_info_with_people(self, squad):
         people = self.get_people(Person.Filter.squad_id(squad.id), Person.Sort.surname)
@@ -73,7 +73,7 @@ class Sbor:
         else:
             return '{}{:01}{}'.format(left_bracket, index, right_bracket)
 
-    def get_person_info(self, person, info = Person.Info.Compact, index = None, name_first = False):
+    def get_person_info_one_line(self, person, info = Person.Info.Compact, index = None, name_first = False):
         id = None
         squad_id = None
         phone_number = None
@@ -95,26 +95,49 @@ class Sbor:
             person_info = self.get_person_info_index(index, self.get_people_count(), info, '`[', ']` ') + person_info
         return person_info
 
+    def get_person_info(self, person, info = Person.Info.Compact, name_first = False):
+        id = None
+        squad_id = None
+        phone_number = person.get_phone_number()
+
+        if info == Person.Info.Full:
+            squad_id = person.squad_id
+        elif info == Person.Info.Debug:
+            id = person.id
+            squad_id = person.squad_id
+
+        person_info = '*' + person.get_full_name(name_first) + '*\n'
+        if id:
+            person_info += 'ID: {}\n'.format(id)
+        if squad_id:
+            person_info +=  'Отряд: \'{}\'\n'.format(self.get_squad(squad_id).name)
+        if phone_number:
+            person_info += 'Телефон: {}\n'.format(phone_number)
+        return person_info
+
     def get_service_info(self, service):
         if not service.supervisor_id:
             return '*' + service.name + '*\n'+ 'Пока нет ответственного'
 
         supervisor = self.get_person(service.supervisor_id)
-        return '*' + service.name + '*\n'+ self.get_person_info(supervisor, Person.Info.Full)
+        return '*' + service.name + '*\n'+ self.get_person_info_one_line(supervisor, Person.Info.Full)
 
     def get_duty_info(self, duty, info = Person.Info.Full):
         squad_id = duty.commander_squad_id
         nickname = '*Дежурный Командир Сбора*' if squad_id == None else 'ДКО _\'' + self.get_squad(squad_id).name + '\'_'
         commander = self.get_person(duty.commander_id)
-        return nickname + '\n' + self.get_person_info(commander, info)
+        return nickname + '\n' + self.get_person_info_one_line(commander, info)
 
     def get_duty_by_squad(self, squad_id):
         squad_duties = list(filter(lambda duty: duty.commander_squad_id == squad_id, self.__duties))
         return squad_duties[0]
 
-    def get_people(self, people_filter, people_sort):
-        result = list(filter(people_filter, list(self.__people)))
-        result.sort(key = people_sort)
+    def get_people(self, people_filter = None, people_sort = None):
+        result = list(self.__people)
+        if people_filter:
+            result = list(filter(people_filter, result))
+        if people_sort:
+            result.sort(key = people_sort)
         return result
 
     def get_people_grouped_by_squad(self, sort):
@@ -167,7 +190,7 @@ class Sbor:
         index = 1
         for person in people:
             people_info += '\n' if people_info else ''
-            people_info += self.get_person_info(person, index = index, info = info, name_first = name_first)
+            people_info += self.get_person_info_one_line(person, index = index, info = info, name_first = name_first)
             index += 1
         return people_info
 
@@ -181,6 +204,25 @@ class Sbor:
         people = list(self.__people)
         people.sort(key = sort)
         return '*Список участников*\n' + self.get_people_info(people, info, name_first)
+
+    def __find_people_by_key(self, key):
+        if key.isdigit():
+            id = int(key)
+            return self.get_people(Person.Filter.id(id))
+
+        key = key.lower()
+        people = self.get_people(Person.Filter.name(key))
+        people.extend(self.get_people(Person.Filter.surname(key)))
+        return people
+
+    def find_people(self, keys):
+        people = None
+        for key in keys:
+            if people:
+                people = people & set(self.__find_people_by_key(key))
+            else:
+                people = set(self.__find_people_by_key(key))
+        return people
 
     def edit_commanders(self, new_main_commander_id, new_commanders_ids):
         if not new_main_commander_id or len(new_commanders_ids) != self.get_squads_count():
