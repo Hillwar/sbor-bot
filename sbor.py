@@ -1,7 +1,7 @@
 from queue import Full
 from openpyxl import Workbook, load_workbook
 from people import Person, PersonRole, Service, Squad
-from parser import parse, save
+from parser import parse_sbor, save_sbor
 from config import Resources
 
 class Sbor:
@@ -261,8 +261,8 @@ class Sbor:
 
     def save(self):
         workbook = load_workbook(self.__excel_path)
-        save(workbook, self.__excel_path, self.__duties)
+        save_sbor(workbook, self.__excel_path, self.__duties)
 
     def load(self):
         workbook = load_workbook(self.__excel_path, data_only=True)
-        self.__people, self.__squads, self.__duties, self.__services, self.__roles = parse(workbook)
+        self.__people, self.__squads, self.__duties, self.__services, self.__roles = parse_sbor(workbook)

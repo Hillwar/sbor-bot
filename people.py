@@ -64,3 +64,19 @@ class Duty:
 
     def get_commander_nickname(self):
         return 'ДКС' if self.commander_squad_id is None else 'ДКО'
+
+class Admin:
+    def __init__(self, id, telegram, role_id):
+        self.id = id
+        self.telegram = telegram
+        self.role_id = role_id
+
+class AdminRole:
+    def __init__(self, id, name, public_messages, edit_timetable, edit_commanders, edit_admins, see_ids):
+        self.id = id
+        self.name = name
+        self.public_messages = public_messages
+        self.edit_timetable = edit_timetable
+        self.edit_commanders = edit_commanders
+        self.edit_admins = edit_admins
+        self.see_ids = see_ids
