@@ -1,7 +1,7 @@
 
 from re import L
 import string
-from people import Service, Person, PersonRole, Squad, Duty
+from people import Admin, AdminRole, Service, Person, PersonRole, Squad, Duty
 
 def get_cell_value(sheet, col, row):
     value = sheet.cell(row = row, column = col).value
@@ -10,7 +10,7 @@ def get_cell_value(sheet, col, row):
 def set_cell_value(sheet, col, row, value):
     sheet.cell(row = row, column = col, value = value)
 
-def parse_sbor(workbook):
+def get_sbor(workbook):
     first_row = 3
 
     def parse_people(sheet):
@@ -119,7 +119,7 @@ def parse_sbor(workbook):
 def save_sbor(workbook, path, duties):
     first_row = 3
 
-    def save_duties(sheet, duties):
+    def set_duties(sheet, duties):
         commander_id_col = 2
         commander_squad_id_col = 3
         row = first_row
@@ -139,37 +139,85 @@ def save_sbor(workbook, path, duties):
             row += 1
 
 
-    save_duties(workbook.get_sheet_by_name('Duty'), duties)
+    set_duties(workbook.get_sheet_by_name('Duty'), duties)
     workbook.save(path)
 
-def parse_admins(workbook):
+def get_admins(workbook):
     first_row = 3
 
-    def parse_list(sheet):
-        people = []
+    def parse_admins(sheet):
+        admins = []
         id_col = 1
-        surname_col = 2
-        name_col = 3
-        phone_col = 4
-        squad_id_col = 5
-        role_id_col = 6
+        telegram_col = 2
+        role_id_col = 3
         row = first_row
 
         while get_cell_value(sheet, id_col, row):
             id = get_cell_value(sheet, id_col, row)
-            surname = get_cell_value(sheet, surname_col, row)
-            name = get_cell_value(sheet, name_col, row)
-            phone = get_cell_value(sheet, phone_col, row)
-            squad_id = get_cell_value(sheet, squad_id_col, row)
+            telegram = get_cell_value(sheet, telegram_col, row)
             role_id = get_cell_value(sheet, role_id_col, row)
 
-            person = Person(id, name, surname, phone, squad_id, role_id)
-            people.append(person)
+            admin = Admin(id, telegram, role_id)
+            admins.append(admin)
             row += 1
 
-        return people
+        return admins
 
     def parse_roles(sheet):
+        adminRoles = []
+        id_col = 1
+        name_col = 2
+        public_messages_col = 3
+        see_ids_col = 4
+        edit_timetable_col = 5
+        edit_commanders_col = 6
+        edit_admins_col = 7
+        row = first_row
+
+        while get_cell_value(sheet, id_col, row):
+            id = get_cell_value(sheet, id_col, row)
+            name = get_cell_value(sheet, name_col, row)
+            public_messages = get_cell_value(sheet, public_messages_col, row)
+            see_ids = get_cell_value(sheet, see_ids_col, row)
+            edit_timetable = get_cell_value(sheet, edit_timetable_col, row)
+            edit_commanders = get_cell_value(sheet, edit_commanders_col, row)
+            manage_admins = get_cell_value(sheet, edit_admins_col, row)
+
+            adminRole = AdminRole(
+                id = id,
+                name = name,
+                public_messages = public_messages,
+                see_ids = see_ids,
+                edit_timetable = edit_timetable,
+                edit_commanders = edit_commanders,
+                manage_admins = manage_admins
+            )
+            adminRoles.append(adminRole)
+            row += 1
+
+        return adminRoles
+
+    admins = parse_admins(workbook.get_sheet_by_name('Admins'))
+    roles = parse_roles(workbook.get_sheet_by_name('Roles'))
+
+    return admins, roles
 
 
-    return people, squads, duties, services, roles
+def save_admins(workbook, path, admins):
+    first_row = 3
+
+    def set_admins(sheet, admins):
+        admins = []
+        id_col = 1
+        telegram_col = 2
+        role_id_col = 3
+        row = first_row
+
+        for admin in admins:
+            set_cell_value(sheet, telegram_col, row, admin.telegram)
+            set_cell_value(sheet, role_id_col, row, admin.role_id)
+            row += 1
+
+
+    set_admins(workbook.get_sheet_by_name('Admins'), admins)
+    workbook.save(path)
