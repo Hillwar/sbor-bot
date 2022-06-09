@@ -1,8 +1,5 @@
 TOKEN = '5248759255:AAF9LH5NoSFcTj2r_obycP2uPjoashqvMM8'
 
-class Admins:
-    list = ['MikhKir', 'julia_severyanova', "EgorVkimow"]
-
 class Paths:
     resource = 'resource'
     data = resource + '/data'
@@ -24,4 +21,4 @@ class Resources:
 
     class Data:
         sbor = Paths.data + '/sbor_data.xlsx'
-        admins = Paths.data + '/admins.txt'
+        admins = Paths.data + '/admins.xlsx'

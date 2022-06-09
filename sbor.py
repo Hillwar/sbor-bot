@@ -1,9 +1,8 @@
-from queue import Full
+import imp
 from openpyxl import Workbook, load_workbook
 from people import Person, PersonRole, Service, Squad
-from parser import parse_sbor, save_sbor
-from config import Resources
-
+from parser import get_sbor, save_sbor
+from tools import Tools
 class Sbor:
     def __init__(self, excel_path):
         self.__excel_path = excel_path
@@ -65,14 +64,6 @@ class Sbor:
         return  self.get_squad_info_full(squad) + '\n\n'\
                 '*Состав*\n' + self.get_people_info(people)
 
-    def get_person_info_index(self, index, people_count, info, left_bracket = '', right_bracket = ')'):
-        if people_count > 99:
-            return '{}{:03}{}'.format(left_bracket, index, right_bracket)
-        elif people_count > 9:
-            return '{}{:02}{}'.format(left_bracket, index, right_bracket)
-        else:
-            return '{}{:01}{}'.format(left_bracket, index, right_bracket)
-
     def get_person_info_one_line(self, person, info = Person.Info.Compact, index = None, name_first = False):
         id = None
         squad_id = None
@@ -88,11 +79,11 @@ class Sbor:
         if phone_number:
             person_info += ' ' + phone_number
         if squad_id:
-            person_info = self.get_person_info_index(squad_id, self.get_squads_count(), info, '`(o', ')` ') + person_info
+            person_info = Tools.get_index(squad_id, self.get_squads_count(), info, '`(o', ')` ') + person_info
         if id:
-            person_info = self.get_person_info_index(id, self.get_people_count(), info, '`<i', '>` ') + person_info
+            person_info = Tools.get_index(id, self.get_people_count(), info, '`<i', '>` ') + person_info
         if index:
-            person_info = self.get_person_info_index(index, self.get_people_count(), info, '`[', ']` ') + person_info
+            person_info = Tools.get_index(index, self.get_people_count(), info, '`[', ']` ') + person_info
         return person_info
 
     def get_person_info(self, person, info = Person.Info.Compact, name_first = False):
@@ -265,4 +256,4 @@ class Sbor:
 
     def load(self):
         workbook = load_workbook(self.__excel_path, data_only=True)
-        self.__people, self.__squads, self.__duties, self.__services, self.__roles = parse_sbor(workbook)
+        self.__people, self.__squads, self.__duties, self.__services, self.__roles = get_sbor(workbook)

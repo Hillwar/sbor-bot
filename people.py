@@ -72,11 +72,11 @@ class Admin:
         self.role_id = role_id
 
 class AdminRole:
-    def __init__(self, id, name, public_messages, edit_timetable, edit_commanders, edit_admins, see_ids):
+    def __init__(self, id, name, public_messages, see_ids, edit_timetable, edit_commanders, manage_admins):
         self.id = id
         self.name = name
         self.public_messages = public_messages
+        self.see_ids = see_ids
         self.edit_timetable = edit_timetable
         self.edit_commanders = edit_commanders
-        self.edit_admins = edit_admins
-        self.see_ids = see_ids
+        self.manage_admins = manage_admins
