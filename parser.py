@@ -205,17 +205,32 @@ def save_admins(workbook, path, admins):
     first_row = 3
 
     def set_admins(sheet, admins):
-        admins = []
         id_col = 1
         telegram_col = 2
         role_id_col = 3
         row = first_row
 
         for admin in admins:
+            set_cell_value(sheet, id_col, row, admin.id)
             set_cell_value(sheet, telegram_col, row, admin.telegram)
             set_cell_value(sheet, role_id_col, row, admin.role_id)
             row += 1
 
+        set_cell_value(sheet, id_col, row, '')
+        set_cell_value(sheet, telegram_col, row, '')
+        set_cell_value(sheet, role_id_col, row, '')
 
     set_admins(workbook.get_sheet_by_name('Admins'), admins)
     workbook.save(path)
+
+
+def get_users(file):
+    user_ids = set()
+    for line in file:
+        user_ids.add(int(line))
+
+    return user_ids
+
+def save_users(file, users):
+    for user in users:
+        file.write('{}\n'.format(user))

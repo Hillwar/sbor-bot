@@ -1,7 +1,33 @@
 from openpyxl import Workbook, load_workbook
 from people import Admin, AdminRole
-from parser import get_admins, save_admins
+from parser import get_users, save_users, save_admins, get_admins
 from tools import Tools
+
+class Users:
+    def __init__(self, document_path):
+        self.__document_path = document_path
+        self.load()
+
+    def add_user(self, user):
+        if user in self.__users:
+            return False
+
+        self.__users.add(user)
+        return True
+
+    def get_users(self):
+        return list(self.__users)
+
+    def save(self):
+        # Возникнут проблемы с много-поточкой. Нужно написать защиту
+        with open(self.__document_path, 'w') as file:
+            save_users(file, self.__users)
+
+    def load(self):
+        # Возникнут проблемы с много-поточкой. Нужно написать защиту
+        with open(self.__document_path, 'r') as file:
+            self.__users = get_users(file)
+
 
 class Admins:
     def __init__(self, excel_path):
@@ -54,7 +80,7 @@ class Admins:
         return self.get_users_who_can(lambda role: role.manage_admins)
 
     def refresh_admins_ids(self):
-        for i, admin in self.__admins:
+        for i, admin in enumerate(self.__admins):
             admin.id = i + 1
 
     def add_admin(self, telegram, role_id):
@@ -98,7 +124,7 @@ class Admins:
         if not Tools.in_range(new_role_id, 1, self.get_roles_count()):
             return False, 'ID роли должно быть в пределах от {} до {}.'.format(1, self.get_roles_count())
 
-        self.get_admin(id).role = new_role_id
+        self.__admins[id - 1].role_id = new_role_id
         return True, ''
 
     def get_admin_info(self, admin):

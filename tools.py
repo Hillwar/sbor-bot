@@ -25,4 +25,4 @@ class Tools:
 
     @staticmethod
     def in_range(value, min, max):
-        return value >= min or value <= max
+        return value >= min and value <= max

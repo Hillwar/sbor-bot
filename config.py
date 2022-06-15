@@ -22,3 +22,4 @@ class Resources:
     class Data:
         sbor = Paths.data + '/sbor_data.xlsx'
         admins = Paths.data + '/admins.xlsx'
+        users = Paths.data + '/users.txt'

@@ -6,11 +6,12 @@ from config import Resources
 from sbor import Sbor
 from people import Person
 from telebot import types
-from users import Admins
+from users import Admins, Users
 
 bot = telebot.TeleBot(config.TOKEN)
 sbor = Sbor(Resources.Data.sbor)
 admins = Admins(Resources.Data.admins)
+users = Users(Resources.Data.users)
 
 def is_right_user(user, right_usernames):
     return user.username in right_usernames
@@ -160,8 +161,8 @@ class Markup:
 
 def send_message(message, photo_path = None, text = None, reply_markup = None, parse_mode = 'Markdown'):
     if photo_path:
-        photo = open(photo_path, 'rb')
-        return bot.send_photo(message.chat.id, photo=photo, caption=text, reply_markup = reply_markup, parse_mode=parse_mode)
+        with open(photo_path, 'rb') as photo:
+            return bot.send_photo(message.chat.id, photo=photo, caption=text, reply_markup = reply_markup, parse_mode=parse_mode)
     else:
         return bot.send_message(message.chat.id, text = text, reply_markup = reply_markup, parse_mode=parse_mode)
 
@@ -173,9 +174,9 @@ def edit_message(message, text = None, reply_markup = None, parse_mode = 'Markdo
 
 def edit_photo(message, photo_path, reply_markup = None, parse_mode = 'Markdown'):
     if message.photo:
-        photo = open(photo_path, 'rb')
-        media = types.InputMediaPhoto(photo)
-        return bot.edit_message_media(media = media, chat_id = message.chat.id, message_id = message.message_id, reply_markup = reply_markup)
+        with open(photo_path, 'rb') as photo:
+            media = types.InputMediaPhoto(photo)
+            return bot.edit_message_media(media = media, chat_id = message.chat.id, message_id = message.message_id, reply_markup = reply_markup)
     else:
         return bot.edit_message_text(chat_id = message.chat.id, message_id = message.message_id, text = 'ОШИБКА! У этого сообщения нет фото, которое можно изменить', reply_markup = None, parse_mode=parse_mode)
 
@@ -207,6 +208,8 @@ def show_edit(message):
 
 @bot.message_handler(commands=['start'])
 def start_command(message):
+    users.add_user(message.from_user.id)
+    users.save()
     send_message(message, text = 'Привет!', reply_markup = Markup.Main.show)
 
 @bot.message_handler(commands=['restart'])
@@ -483,9 +486,11 @@ def remove_admin(message):
         bot.register_next_step_handler(message, remove_admin)
         return
 
-    result, error = admins.remove_admin(int(id_strings[0]))
+    admin_id = int(id_strings[0])
+    admin_telegram = admins.get_admin(admin_id).telegram
+    result, error = admins.remove_admin(admin_id)
     if result:
-        send_message(message, text = 'Админ удален!', reply_markup = Markup.Main.show)
+        send_message(message, text = 'Админ `{}` удален!'.format(admin_telegram), reply_markup = Markup.Main.show)
         admins.save()
     else:
         send_message(message, text = error + ' Повторите.', reply_markup=Markup.Exit.admins_remove_exit)
@@ -496,7 +501,7 @@ def find_people(message):
     if not message.text:
         send_message(message, text = 'Вы не передали данные для поиска человека. Нужно передать имя и/или фамилию человека. Повторите.', reply_markup = Markup.Exit.people_search_exit)
         bot.register_next_step_handler(message, find_people)
-        return
+    return
 
     if message.text == 'Выход из режима поиска' or message.text == 'Отмена':
         send_message(message, text = 'Поиск закончен', reply_markup = Markup.Main.show)
