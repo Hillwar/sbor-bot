@@ -78,11 +78,11 @@ class Sbor:
         if phone_number:
             person_info += ' ' + phone_number
         if squad_id:
-            person_info = Tools.get_index(squad_id, self.get_squads_count(), info, '`(o', ')` ') + person_info
+            person_info = Tools.get_index(squad_id, self.get_squads_count(), '`(o', ')` ') + person_info
         if id:
-            person_info = Tools.get_index(id, self.get_people_count(), info, '`<i', '>` ') + person_info
+            person_info = Tools.get_index(id, self.get_people_count(), '`<i', '>` ') + person_info
         if index:
-            person_info = Tools.get_index(index, self.get_people_count(), info, '`[', ']` ') + person_info
+            person_info = Tools.get_index(index, self.get_people_count(), '`[', ']` ') + person_info
         return person_info
 
     def get_person_info(self, person, info = Person.Info.Compact, name_first = False):

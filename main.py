@@ -1,4 +1,5 @@
 from modulefinder import ReplacePackage
+from re import I
 import telebot
 import config
 
@@ -40,6 +41,8 @@ class Buttons:
         search = types.InlineKeyboardButton(text = 'Поиск человека', callback_data = 'other search')
         edit = types.InlineKeyboardButton(text = 'Изменить данные', callback_data = 'other edit')
         admins = types.InlineKeyboardButton(text = 'Управление админами', callback_data = 'other admins')
+        message = types.InlineKeyboardButton(text = 'Опубликовать сообщение', callback_data = 'other message')
+
 
     class Edit:
         timetable = types.InlineKeyboardButton(text = 'Изменить расписание', callback_data = 'edit timetable')
@@ -104,13 +107,18 @@ class Markup:
         timetable_edit_exit = types.ReplyKeyboardMarkup(resize_keyboard = True, row_width = 1)
         timetable_edit_exit.add(types.KeyboardButton(text = 'Выход из режима изменения расписания'))
 
+        public_message_exit = types.ReplyKeyboardMarkup(resize_keyboard = True, row_width = 1)
+        public_message_exit.add(types.KeyboardButton(text = 'Выход из режима публикации сообщения'))
+
     class Other:
         def show(user):
             markup = types.InlineKeyboardMarkup(row_width = 1)
-            if is_right_user(user, admins.get_users_who_can_edit_something()):
-                markup.add(Buttons.Other.edit)
             if is_right_user(user, admins.get_users_who_can_edit_admins()):
                 markup.add(Buttons.Other.admins)
+            if is_right_user(user, admins.get_users_who_can_edit_something()):
+                markup.add(Buttons.Other.edit)
+            if is_right_user(user, admins.get_users_who_can_public_messages()):
+                markup.add(Buttons.Other.message)
             markup.add(Buttons.Other.search, Buttons.General.cancel)
             return markup
 
@@ -159,12 +167,14 @@ class Markup:
             markup.add(Buttons.People.Sort.by_name, Buttons.People.Sort.by_surname, Buttons.People.back)
             return markup
 
-def send_message(message, photo_path = None, text = None, reply_markup = None, parse_mode = 'Markdown'):
-    if photo_path:
+def send_message(id, photo_path = None, photo = None, text = None, reply_markup = None, parse_mode = 'Markdown'):
+    if photo:
+        return bot.send_photo(chat_id = id, photo=photo, caption=text, reply_markup = reply_markup, parse_mode=parse_mode)
+    elif photo_path:
         with open(photo_path, 'rb') as photo:
-            return bot.send_photo(message.chat.id, photo=photo, caption=text, reply_markup = reply_markup, parse_mode=parse_mode)
+            return bot.send_photo(chat_id = id, photo=photo, caption=text, reply_markup = reply_markup, parse_mode=parse_mode)
     else:
-        return bot.send_message(message.chat.id, text = text, reply_markup = reply_markup, parse_mode=parse_mode)
+        return bot.send_message(chat_id = id, text = text, reply_markup = reply_markup, parse_mode=parse_mode)
 
 def edit_message(message, text = None, reply_markup = None, parse_mode = 'Markdown'):
     if message.photo:
@@ -172,45 +182,51 @@ def edit_message(message, text = None, reply_markup = None, parse_mode = 'Markdo
     else:
         return bot.edit_message_text(chat_id = message.chat.id, message_id = message.message_id, text = text, reply_markup = reply_markup, parse_mode=parse_mode)
 
-def edit_photo(message, photo_path, reply_markup = None, parse_mode = 'Markdown'):
+def edit_photo(message, photo_path = None, photo = None, reply_markup = None, parse_mode = 'Markdown'):
     if message.photo:
-        with open(photo_path, 'rb') as photo:
+        if photo:
             media = types.InputMediaPhoto(photo)
             return bot.edit_message_media(media = media, chat_id = message.chat.id, message_id = message.message_id, reply_markup = reply_markup)
+        elif photo_path:
+            with open(photo_path, 'rb') as photo:
+                media = types.InputMediaPhoto(photo)
+                return bot.edit_message_media(media = media, chat_id = message.chat.id, message_id = message.message_id, reply_markup = reply_markup)
+        else:
+            return bot.edit_message_text(chat_id = message.chat.id, message_id = message.message_id, text = 'ОШИБКА! Вы не передали фото для изменения!', reply_markup = None, parse_mode=parse_mode)
     else:
-        return bot.edit_message_text(chat_id = message.chat.id, message_id = message.message_id, text = 'ОШИБКА! У этого сообщения нет фото, которое можно изменить', reply_markup = None, parse_mode=parse_mode)
+        return bot.edit_message_text(chat_id = message.chat.id, message_id = message.message_id, text = 'ОШИБКА! У этого сообщения нет фото, которое можно изменить!', reply_markup = None, parse_mode=parse_mode)
 
 
 def show_timetable(message):
-    send_message(message, photo_path = Resources.Timetable.today, reply_markup = Markup.Timetable.sbor)
+    send_message(message.chat.id, photo_path = Resources.Timetable.today, reply_markup = Markup.Timetable.sbor)
 
 def show_services(message):
     services_info = sbor.get_services_info()
-    send_message(message, photo_path = Resources.Images.background_3,  text = services_info)
+    send_message(message.chat.id, photo_path = Resources.Images.background_3,  text = services_info)
 
 def show_squads(message):
-    send_message(message, photo_path = Resources.Images.background_1, reply_markup = Markup.Squads.show)
+    send_message(message.chat.id, photo_path = Resources.Images.background_1, reply_markup = Markup.Squads.show)
 
 def show_duties(message):
     duties_info = sbor.get_duties_info()
-    send_message(message, photo_path = Resources.Images.background_5, text = duties_info)
+    send_message(message.chat.id, photo_path = Resources.Images.background_5, text = duties_info)
 
 def show_people(message):
     info = Person.Info.Compact
-    send_message(message, text = sbor.get_all_people_info(Person.Sort.surname, info), reply_markup = Markup.People.show)
+    send_message(message.chat.id, text = sbor.get_all_people_info(Person.Sort.surname, info), reply_markup = Markup.People.show)
 
 def show_other(message):
-    send_message(message, photo_path = Resources.Images.background_4, reply_markup = Markup.Other.show(message.from_user))
+    send_message(message.chat.id, photo_path = Resources.Images.background_4, reply_markup = Markup.Other.show(message.from_user))
 
 def show_edit(message):
-    send_message(message, photo_path = Resources.Images.background_4, reply_markup=Markup.Edit.show(message.from_user))
+    send_message(message.chat.id, photo_path = Resources.Images.background_4, reply_markup=Markup.Edit.show(message.from_user))
 
 
 @bot.message_handler(commands=['start'])
 def start_command(message):
     users.add_user(message.from_user.id)
     users.save()
-    send_message(message, text = 'Привет!', reply_markup = Markup.Main.show)
+    send_message(message.chat.id, text = 'Привет!', reply_markup = Markup.Main.show)
 
 @bot.message_handler(commands=['restart'])
 def restart_command(message):
@@ -241,8 +257,12 @@ def other_callback(call):
     keyword = call.data.split()[1]
     if keyword == 'search':
         bot.edit_message_reply_markup(chat_id = call.message.chat.id,message_id = call.message.message_id, reply_markup = None)
-        message = send_message(call.message, text = 'Введите имя и/или фамилию человека, которого хотите найти. *Лучше вводить только фамилию.*', reply_markup = Markup.Exit.people_search_exit)
+        message = send_message(call.message.chat.id, text = 'Введите имя и/или фамилию человека, которого хотите найти. *Лучше вводить только фамилию.*', reply_markup = Markup.Exit.people_search_exit)
         bot.register_next_step_handler(message, find_people)
+    elif keyword == 'message':
+        bot.edit_message_reply_markup(chat_id = call.message.chat.id,message_id = call.message.message_id, reply_markup = None)
+        message = send_message(call.message.chat.id, text = 'Введите сообщение, которое хотите передать всему сбору.\n*Отправку нельзя отменить! Будьте бдительны!*', reply_markup = Markup.Exit.public_message_exit)
+        bot.register_next_step_handler(message, public_message)
     elif keyword == 'edit':
         bot.edit_message_reply_markup(chat_id = call.message.chat.id,message_id = call.message.message_id, reply_markup = Markup.Edit.show(call.from_user))
     elif keyword == 'admins':
@@ -254,11 +274,11 @@ def edit_callback(call):
     keyword = call.data.split()[1]
     if keyword == 'timetable':
         bot.edit_message_reply_markup(chat_id = call.message.chat.id, message_id = call.message.message_id, reply_markup = None)
-        message = send_message(call.message, text='Отправьте фото расписания)', reply_markup=Markup.Exit.timetable_edit_exit)
+        message = send_message(call.message.chat.id, text='Отправьте фото расписания)', reply_markup=Markup.Exit.timetable_edit_exit)
         bot.register_next_step_handler(message, edit_timetable, )
     elif keyword == 'commanders':
         bot.edit_message_reply_markup(chat_id = call.message.chat.id, message_id = call.message.message_id, reply_markup = None)
-        message = send_message(call.message, text='Отправьте ID ДКС и всех ДКО через пробел. ДКС обязательно первым!', reply_markup=Markup.Exit.commander_edit_exit)
+        message = send_message(call.message.chat.id, text='Отправьте ID ДКС и всех ДКО через пробел. ДКС обязательно первым!', reply_markup=Markup.Exit.commander_edit_exit)
         bot.register_next_step_handler(message, edit_commanders)
     bot.answer_callback_query(call.id)
 
@@ -268,22 +288,22 @@ def timetable_callback(call):
     if keyword == 'list':
         edit_message(call.message, text = '*Список админов*')
         for admin in admins.get_admins_info():
-            send_message(message = call.message, text = admin)
+            send_message(id = call.message.chat.id, text = admin)
     elif keyword == 'roles':
         edit_message(call.message, text = '*Список ролей*')
         text = '\n\n'.join(admins.get_roles_info())
-        send_message(message = call.message, text = text)
+        send_message(id = call.message.chat.id, text = text)
     elif keyword == 'add':
         bot.edit_message_reply_markup(chat_id = call.message.chat.id, message_id = call.message.message_id, reply_markup = None)
-        message = send_message(call.message, text='Отправьте Telegram и ID роли нового админа', reply_markup=Markup.Exit.admins_add_exit)
+        message = send_message(call.message.chat.id, text='Отправьте Telegram и ID роли нового админа', reply_markup=Markup.Exit.admins_add_exit)
         bot.register_next_step_handler(message, add_admin)
     elif keyword == 'edit_role':
         bot.edit_message_reply_markup(chat_id = call.message.chat.id, message_id = call.message.message_id, reply_markup = None)
-        message = send_message(call.message, text='Отправьте ID админа и ID его новой роли', reply_markup=Markup.Exit.admins_edit_role_exit)
+        message = send_message(call.message.chat.id, text='Отправьте ID админа и ID его новой роли', reply_markup=Markup.Exit.admins_edit_role_exit)
         bot.register_next_step_handler(message, edit_role_of_admins)
     elif keyword == 'remove':
         bot.edit_message_reply_markup(chat_id = call.message.chat.id, message_id = call.message.message_id, reply_markup = None)
-        message = send_message(call.message, text='Отправьте ID админа, которого хотите удалить', reply_markup=Markup.Exit.admins_remove_exit)
+        message = send_message(call.message.chat.id, text='Отправьте ID админа, которого хотите удалить', reply_markup=Markup.Exit.admins_remove_exit)
         bot.register_next_step_handler(message, remove_admin)
     bot.answer_callback_query(call.id)
 
@@ -356,25 +376,25 @@ def save_photo(message, path):
 
 def edit_timetable(message):
     if message.text and (message.text == 'Выход из режима изменения расписания' or message.text == 'Отмена'):
-        send_message(message, text = 'Отмена изменений', reply_markup = Markup.Main.show)
+        send_message(message.chat.id, text = 'Отмена изменений', reply_markup = Markup.Main.show)
         return
 
     result = save_photo(message, Resources.Timetable.today)
     if not result:
-        send_message(message, text = 'Вы не передали фото расписания. Повторите.', reply_markup=Markup.Exit.timetable_edit_exit)
+        send_message(message.chat.id, text = 'Вы не передали фото расписания. Повторите.', reply_markup=Markup.Exit.timetable_edit_exit)
         bot.register_next_step_handler(message, edit_timetable)
         return
 
-    send_message(message, text = 'Новое расписание сохранено!', reply_markup = Markup.Main.show)
+    send_message(message.chat.id, text = 'Новое расписание сохранено!', reply_markup = Markup.Main.show)
 
 def edit_commanders(message):
     if not message.text:
-        send_message(message, text = 'Вы не передали ID новых коммандиров. Повторите.', reply_markup=Markup.Exit.commander_edit_exit)
+        send_message(message.chat.id, text = 'Вы не передали ID новых коммандиров. Повторите.', reply_markup=Markup.Exit.commander_edit_exit)
         bot.register_next_step_handler(message, edit_commanders)
         return
 
     if message.text == 'Выход из режима изменения ДКС и ДКО' or message.text == 'Отмена':
-        send_message(message, text = 'Отмена изменений', reply_markup = Markup.Main.show)
+        send_message(message.chat.id, text = 'Отмена изменений', reply_markup = Markup.Main.show)
         return
 
     id_strings = message.text.split()
@@ -382,7 +402,7 @@ def edit_commanders(message):
     ids = []
     for id_string in id_strings:
         if not id_string.isdigit():
-            send_message(message, text = 'Вы должны передать ID командиров. Повторите.'.format(sbor.get_people_count()))
+            send_message(message.chat.id, text = 'Вы должны передать ID командиров. Повторите.'.format(sbor.get_people_count()))
             bot.register_next_step_handler(message, edit_commanders)
             return
         id = int(id_string)
@@ -390,34 +410,34 @@ def edit_commanders(message):
 
     result, error = sbor.edit_commanders(ids[0], ids[1:])
     if result:
-        send_message(message, text = sbor.get_duties_info(), reply_markup = Markup.Main.show)
-        send_message(message, text = 'Информация сохранена!')
+        send_message(message.chat.id, text = sbor.get_duties_info(), reply_markup = Markup.Main.show)
+        send_message(message.chat.id, text = 'Информация сохранена!')
         sbor.save()
     else:
-        send_message(message, text = error + ' Повторите.')
+        send_message(message.chat.id, text = error + ' Повторите.')
         bot.register_next_step_handler(message, edit_commanders)
 
 def edit_role_of_admins(message):
     if not message.text:
-        send_message(message, text = 'Вы не передали ID админа и ID новой роли. Повторите.', reply_markup=Markup.Exit.admins_edit_role_exit)
+        send_message(message.chat.id, text = 'Вы не передали ID админа и ID новой роли. Повторите.', reply_markup=Markup.Exit.admins_edit_role_exit)
         bot.register_next_step_handler(message, edit_role_of_admins)
         return
 
     if message.text == 'Выход из режима изменения роли админа' or message.text == 'Отмена':
-        send_message(message, text = 'Отмена изменения роли админа', reply_markup = Markup.Main.show)
+        send_message(message.chat.id, text = 'Отмена изменения роли админа', reply_markup = Markup.Main.show)
         return
 
     id_strings = message.text.split()
 
     if len(id_strings) != 2:
-        send_message(message, text = 'Нужно передать 2 числа. ID админа и ID новой роли. Повторите.', reply_markup=Markup.Exit.admins_edit_role_exit)
+        send_message(message.chat.id, text = 'Нужно передать 2 числа. ID админа и ID новой роли. Повторите.', reply_markup=Markup.Exit.admins_edit_role_exit)
         bot.register_next_step_handler(message, edit_role_of_admins)
         return
 
     ids = []
     for id_string in id_strings:
         if not id_string.isdigit():
-            send_message(message, text = 'Нужно передать ID числами, а не словами. Повторите.'.format(sbor.get_people_count()), reply_markup=Markup.Exit.admins_edit_role_exit)
+            send_message(message.chat.id, text = 'Нужно передать ID числами, а не словами. Повторите.'.format(sbor.get_people_count()), reply_markup=Markup.Exit.admins_edit_role_exit)
             bot.register_next_step_handler(message, edit_role_of_admins)
             return
         id = int(id_string)
@@ -425,64 +445,64 @@ def edit_role_of_admins(message):
 
     result, error = admins.edit_role_admin(ids[0], ids[1])
     if result:
-        send_message(message, text = admins.get_admin_info(admins.get_admin(ids[0])), reply_markup = Markup.Main.show)
-        send_message(message, text = 'Информация сохранена!')
+        send_message(message.chat.id, text = admins.get_admin_info(admins.get_admin(ids[0])), reply_markup = Markup.Main.show)
+        send_message(message.chat.id, text = 'Информация сохранена!')
         admins.save()
     else:
-        send_message(message, text = error + ' Повторите.', reply_markup=Markup.Exit.admins_edit_role_exit)
+        send_message(message.chat.id, text = error + ' Повторите.', reply_markup=Markup.Exit.admins_edit_role_exit)
         bot.register_next_step_handler(message, edit_role_of_admins)
 
 
 def add_admin(message):
     if not message.text:
-        send_message(message, text = 'Вы не передали Telegram админа и ID его роли. Повторите.', reply_markup=Markup.Exit.admins_add_exit)
+        send_message(message.chat.id, text = 'Вы не передали Telegram админа и ID его роли. Повторите.', reply_markup=Markup.Exit.admins_add_exit)
         bot.register_next_step_handler(message, add_admin)
         return
 
     if message.text == 'Выход из режима добавления админа' or message.text == 'Отмена':
-        send_message(message, text = 'Отмена добавления админа', reply_markup = Markup.Main.show)
+        send_message(message.chat.id, text = 'Отмена добавления админа', reply_markup = Markup.Main.show)
         return
 
     id_strings = message.text.split()
 
     if len(id_strings) != 2:
-        send_message(message, text = 'Нужно передать 2 значения. Telegram админа и ID его роли. Повторите.', reply_markup=Markup.Exit.admins_add_exit)
+        send_message(message.chat.id, text = 'Нужно передать 2 значения. Telegram админа и ID его роли. Повторите.', reply_markup=Markup.Exit.admins_add_exit)
         bot.register_next_step_handler(message, add_admin)
         return
 
     if not id_strings[1].isdigit():
-        send_message(message, text = 'Нужно передать ID роли числом, а не словом. Повторите.'.format(sbor.get_people_count()), reply_markup=Markup.Exit.admins_add_exit)
+        send_message(message.chat.id, text = 'Нужно передать ID роли числом, а не словом. Повторите.'.format(sbor.get_people_count()), reply_markup=Markup.Exit.admins_add_exit)
         bot.register_next_step_handler(message, add_admin)
         return
 
     result, error = admins.add_admin(id_strings[0], int(id_strings[1]))
     if result:
-        send_message(message, text = admins.get_admin_info(admins.get_admin(admins.get_admins_count())), reply_markup = Markup.Main.show)
-        send_message(message, text = 'Информация сохранена!')
+        send_message(message.chat.id, text = admins.get_admin_info(admins.get_admin(admins.get_admins_count())), reply_markup = Markup.Main.show)
+        send_message(message.chat.id, text = 'Информация сохранена!')
         admins.save()
     else:
-        send_message(message, text = error + ' Повторите.', reply_markup=Markup.Exit.admins_add_exit)
+        send_message(message.chat.id, text = error + ' Повторите.', reply_markup=Markup.Exit.admins_add_exit)
         bot.register_next_step_handler(message, add_admin)
 
 def remove_admin(message):
     if not message.text:
-        send_message(message, text = 'Вы не передали ID админа. Повторите.', reply_markup=Markup.Exit.admins_remove_exit)
+        send_message(message.chat.id, text = 'Вы не передали ID админа. Повторите.', reply_markup=Markup.Exit.admins_remove_exit)
         bot.register_next_step_handler(message, remove_admin)
         return
 
     if message.text == 'Выход из режима удаления админа' or message.text == 'Отмена':
-        send_message(message, text = 'Отмена удаления админа', reply_markup = Markup.Main.show)
+        send_message(message.chat.id, text = 'Отмена удаления админа', reply_markup = Markup.Main.show)
         return
 
     id_strings = message.text.split()
 
     if len(id_strings) != 1:
-        send_message(message, text = 'Нужно передать 1 значение. ID админа. Повторите.', reply_markup=Markup.Exit.admins_remove_exit)
+        send_message(message.chat.id, text = 'Нужно передать 1 значение. ID админа. Повторите.')
         bot.register_next_step_handler(message, remove_admin)
         return
 
     if not id_strings[0].isdigit():
-        send_message(message, text = 'Нужно передать ID админа числом, а не словом. Повторите.'.format(sbor.get_people_count()), reply_markup=Markup.Exit.admins_remove_exit)
+        send_message(message.chat.id, text = 'Нужно передать ID админа числом, а не словом. Повторите.'.format(sbor.get_people_count()))
         bot.register_next_step_handler(message, remove_admin)
         return
 
@@ -490,26 +510,26 @@ def remove_admin(message):
     admin_telegram = admins.get_admin(admin_id).telegram
     result, error = admins.remove_admin(admin_id)
     if result:
-        send_message(message, text = 'Админ `{}` удален!'.format(admin_telegram), reply_markup = Markup.Main.show)
+        send_message(message.chat.id, text = 'Админ `{}` удален!'.format(admin_telegram), reply_markup = Markup.Main.show)
         admins.save()
     else:
-        send_message(message, text = error + ' Повторите.', reply_markup=Markup.Exit.admins_remove_exit)
+        send_message(message.chat.id, text = error + ' Повторите.', reply_markup=Markup.Exit.admins_remove_exit)
         bot.register_next_step_handler(message, remove_admin)
 
 
 def find_people(message):
     if not message.text:
-        send_message(message, text = 'Вы не передали данные для поиска человека. Нужно передать имя и/или фамилию человека. Повторите.', reply_markup = Markup.Exit.people_search_exit)
+        send_message(message.chat.id, text = 'Вы не передали данные для поиска человека. Нужно передать имя и/или фамилию человека. Повторите.', reply_markup = Markup.Exit.people_search_exit)
         bot.register_next_step_handler(message, find_people)
-    return
+        return
 
     if message.text == 'Выход из режима поиска' or message.text == 'Отмена':
-        send_message(message, text = 'Поиск закончен', reply_markup = Markup.Main.show)
+        send_message(message.chat.id, text = 'Поиск закончен', reply_markup = Markup.Main.show)
         return
 
     keys = message.text.split()
     if len(keys) > 2:
-        send_message(message, text = 'Передано слишком много аргументов. Нужно передать только имя и/или фамилию человека. Повторите.')
+        send_message(message.chat.id, text = 'Передано слишком много аргументов. Нужно передать только имя и/или фамилию человека. Повторите.')
         bot.register_next_step_handler(message, find_people)
         return
 
@@ -517,20 +537,45 @@ def find_people(message):
         if key.isdigit():
             if len(keys) == 1 and is_right_user(message.from_user, admins.get_users_who_can_see_ids()):
                 break
-            send_message(message, text = 'Вы передали числа. Нужно передать имя и/или фамилию человека. Повторите.')
+            send_message(message.chat.id, text = 'Вы передали числа. Нужно передать имя и/или фамилию человека. Повторите.')
             bot.register_next_step_handler(message, find_people)
             return
 
     people = sbor.find_people(keys)
     if not people:
-        send_message(message, text = 'Не найдено ни одного человека. Повторите.')
+        send_message(message.chat.id, text = 'Не найдено ни одного человека. Повторите.')
         bot.register_next_step_handler(message, find_people)
         return
 
     info = Person.Info.Debug if is_right_user(message.from_user, admins.get_users_who_can_see_ids()) else Person.Info.Full
-    send_message(message, text = 'Вот кого я нашел', reply_markup = Markup.Exit.people_search_exit)
+    send_message(message.chat.id, text = 'Вот кого я нашел', reply_markup = Markup.Exit.people_search_exit)
     for person in people:
-        send_message(message, text = sbor.get_person_info(person, info))
+        send_message(message.chat.id, text = sbor.get_person_info(person, info))
     bot.register_next_step_handler(message, find_people)
+
+def public_message(message):
+    if not message.text and not message.photo:
+        send_message(message.chat.id, text = 'Вы не передали текст для публикации. Повторите.', reply_markup = Markup.Exit.public_message_exit)
+        bot.register_next_step_handler(message, public_message)
+        return
+
+    if message.text == 'Выход из режима публикации сообщения' or message.text == 'Отмена':
+        send_message(message.chat.id, text = 'Отмена публикации сообщения', reply_markup = Markup.Main.show)
+        return
+
+    message_with_photo = False
+    if message.photo:
+        message_with_photo = save_photo(message=message, path=Resources.Images.temporary)
+
+    for user in users.get_users():
+        if user == message.chat.id:
+            continue
+        elif message_with_photo:
+            send_message(user, text = message.caption, photo_path=Resources.Images.temporary, reply_markup = Markup.Main.show)
+        else:
+            send_message(user, text = message.text, reply_markup = Markup.Main.show)
+
+    send_message(message.chat.id, text = 'Сообщение опубликовано!', reply_markup = Markup.Main.show)
+
 
 bot.polling(none_stop=True)
