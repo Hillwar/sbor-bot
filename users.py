@@ -1,6 +1,5 @@
-import imp
 from openpyxl import Workbook, load_workbook
-from people import Admin, Person, PersonRole, Service, Squad
+from people import Admin, AdminRole
 from parser import get_admins, save_admins
 from tools import Tools
 
@@ -22,7 +21,7 @@ class Admins:
         return self.__roles[id - 1]
 
     def can_role_of_admin(self, admin, predicate):
-        role =  self.__get_role(admin.role_id)
+        role =  self.get_role(admin.role_id)
         return predicate(role)
 
     def get_users_who_can(self, role_predicate):
@@ -34,7 +33,7 @@ class Admins:
         return users
 
     def get_users_in_admins_list(self):
-        return self.get_users_who_can(lambda: True)
+        return self.get_users_who_can(lambda role: True)
 
     def get_users_who_can_public_messages(self):
         return self.get_users_who_can(lambda role: role.public_messages)
@@ -59,10 +58,10 @@ class Admins:
             admin.id = i + 1
 
     def add_admin(self, telegram, role_id):
-        if not telegram or not isinstance(str, type(telegram)):
+        if not telegram or not isinstance(telegram, str):
             return False, 'Вы не передали Telegram админа'
 
-        if not role_id or not isinstance(int, type(role_id)):
+        if not role_id or not isinstance(role_id, int):
             return False, 'Вы не передали ID роли'
 
         if not Tools.in_range(role_id, 1, self.get_roles_count()):
@@ -76,21 +75,21 @@ class Admins:
         return True, ''
 
     def remove_admin(self, id):
-        if not id or not isinstance(int, type(id)):
+        if not id or not isinstance(id, int):
             return False, 'Вы не передали ID админа'
 
         if not Tools.in_range(id, 1, self.get_admins_count()):
             return False, 'ID админа должно быть в пределах от {} до {}'.format(1, self.get_admins_count())
 
-        del self.get_admin(id)
+        del self.__admins[id - 1]
         self.refresh_admins_ids()
         return True, ''
 
     def edit_role_admin(self, id, new_role_id):
-        if not id or not isinstance(int, type(id)):
+        if not id or not isinstance(id, int):
             return False, 'Вы не передали ID админа'
 
-        if not new_role_id or not isinstance(int, type(new_role_id)):
+        if not new_role_id or not isinstance(new_role_id, int):
             return False, 'Вы не передали ID роли'
 
         if not Tools.in_range(id, 1, self.get_admins_count()):
@@ -104,14 +103,13 @@ class Admins:
 
     def get_admin_info(self, admin):
         role = self.get_role(admin.role_id)
-        return  'ID: ' + admin.id + '\n'\
-                'Telegram: ' + admin.telegram + '\n'\
-                'Роль: ' + role.name + '\n'\
-                'Роль ID: ' + role.id
+        return  'Telegram: `' + admin.telegram + '`\n'\
+                'ID: `' + str(admin.id) + '`\n'\
+                'Роль: ' + role.name
 
     def get_role_info(self, role):
-        return  'ID: ' + role.id + '\n'\
-                'Название: ' + role.name + '\n'\
+        return  'Роль _\'' + role.name + '\'_\n'\
+                'ID: `' + str(role.id) + '`\n'\
                 'Может делать рассылку: ' + Tools.bool_to_russian(role.public_messages) + '\n'\
                 'Может видеть ID участников: ' + Tools.bool_to_russian(role.see_ids) + '\n'\
                 'Может изменять командиров: ' + Tools.bool_to_russian(role.edit_commanders) + '\n'\

@@ -1,4 +1,3 @@
-import imp
 from openpyxl import Workbook, load_workbook
 from people import Person, PersonRole, Service, Squad
 from parser import get_sbor, save_sbor
@@ -99,7 +98,7 @@ class Sbor:
 
         person_info = '*' + person.get_full_name(name_first) + '*\n'
         if id:
-            person_info += 'ID: {}\n'.format(id)
+            person_info += 'ID: `{}`\n'.format(id)
         if squad_id:
             person_info +=  'Отряд: \'{}\'\n'.format(self.get_squad(squad_id).name)
         if phone_number:

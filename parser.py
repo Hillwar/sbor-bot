@@ -1,6 +1,3 @@
-
-from re import L
-import string
 from people import Admin, AdminRole, Service, Person, PersonRole, Squad, Duty
 
 def get_cell_value(sheet, col, row):
@@ -115,7 +112,6 @@ def get_sbor(workbook):
 
     return people, squads, duties, services, roles
 
-
 def save_sbor(workbook, path, duties):
     first_row = 3
 
@@ -174,6 +170,9 @@ def get_admins(workbook):
         edit_admins_col = 7
         row = first_row
 
+        def role_right_to_bool(right):
+            return True if right == '+' else False
+
         while get_cell_value(sheet, id_col, row):
             id = get_cell_value(sheet, id_col, row)
             name = get_cell_value(sheet, name_col, row)
@@ -186,11 +185,11 @@ def get_admins(workbook):
             adminRole = AdminRole(
                 id = id,
                 name = name,
-                public_messages = public_messages,
-                see_ids = see_ids,
-                edit_timetable = edit_timetable,
-                edit_commanders = edit_commanders,
-                manage_admins = manage_admins
+                public_messages = role_right_to_bool(public_messages),
+                see_ids = role_right_to_bool(see_ids),
+                edit_timetable = role_right_to_bool(edit_timetable),
+                edit_commanders = role_right_to_bool(edit_commanders),
+                manage_admins = role_right_to_bool(manage_admins)
             )
             adminRoles.append(adminRole)
             row += 1
@@ -201,7 +200,6 @@ def get_admins(workbook):
     roles = parse_roles(workbook.get_sheet_by_name('Roles'))
 
     return admins, roles
-
 
 def save_admins(workbook, path, admins):
     first_row = 3
