@@ -68,7 +68,7 @@ class Admins:
         return self.get_users_who_can(lambda role: role.see_ids)
 
     def get_users_who_can_edit_something(self):
-        return self.get_users_who_can(lambda role: role.edit_commanders or role.edit_timetable or role.manage_admins)
+        return self.get_users_who_can(lambda role: role.edit_commanders or role.edit_timetable)
 
     def get_users_who_can_edit_commanders(self):
         return self.get_users_who_can(lambda role: role.edit_commanders)
@@ -76,7 +76,7 @@ class Admins:
     def get_users_who_can_edit_timetable(self):
         return self.get_users_who_can(lambda role: role.edit_timetable)
 
-    def get_users_who_can_edit_admins(self):
+    def get_users_who_can_manage_admins(self):
         return self.get_users_who_can(lambda role: role.manage_admins)
 
     def refresh_admins_ids(self):

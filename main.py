@@ -113,7 +113,7 @@ class Markup:
     class Other:
         def show(user):
             markup = types.InlineKeyboardMarkup(row_width = 1)
-            if is_right_user(user, admins.get_users_who_can_edit_admins()):
+            if is_right_user(user, admins.get_users_who_can_manage_admins()):
                 markup.add(Buttons.Other.admins)
             if is_right_user(user, admins.get_users_who_can_edit_something()):
                 markup.add(Buttons.Other.edit)
@@ -219,8 +219,15 @@ def show_other(message):
     send_message(message.chat.id, photo_path = Resources.Images.background_4, reply_markup = Markup.Other.show(message.from_user))
 
 def show_edit(message):
-    send_message(message.chat.id, photo_path = Resources.Images.background_4, reply_markup=Markup.Edit.show(message.from_user))
+    if is_right_user(message.from_user, admins.get_users_who_can_edit_something()):
+        send_message(message.chat.id, photo_path = Resources.Images.background_4, reply_markup=Markup.Edit.show(message.from_user))
 
+def show_admins(message):
+    if is_right_user(message.from_user, admins.get_users_who_can_manage_admins()):
+        send_message(message.chat.id, photo_path = Resources.Images.background_4, reply_markup=Markup.Admins.show)
+
+def show_help(message):
+    send_message(message.chat.id, text='help')
 
 @bot.message_handler(commands=['start'])
 def start_command(message):
@@ -235,6 +242,14 @@ def restart_command(message):
 @bot.message_handler(commands=['edit'], is_admin = True)
 def edit_command(message):
     show_edit(message)
+
+@bot.message_handler(commands=['admins'], is_admin = True)
+def admins_command(message):
+    show_admins(message)
+
+@bot.message_handler(commands=['help'])
+def help_command(message):
+    show_help(message)
 
 
 @bot.message_handler(content_types=['text'])
