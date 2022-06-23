@@ -229,6 +229,10 @@ def show_admins(message):
 def show_help(message):
     send_message(message.chat.id, text='help')
 
+def show_sbor(message):
+    sbor_info = sbor.get_sbor_info()
+    send_message(message.chat.id, photo_path = Resources.Images.background_5, text = sbor_info)
+
 @bot.message_handler(commands=['start'])
 def start_command(message):
     users.add_user(message.from_user.id)
@@ -251,21 +255,33 @@ def admins_command(message):
 def help_command(message):
     show_help(message)
 
+@bot.message_handler(commands=['sbor'])
+def help_command(message):
+    show_sbor(message)
 
-@bot.message_handler(content_types=['text'])
-def take_text(message):
-    if message.text == 'Расписание':
-        show_timetable(message)
-    elif message.text == 'ДКС и ДКО':
-        show_duties(message)
-    elif message.text == 'Отряды':
-        show_squads(message)
-    elif message.text == 'Службисты':
-        show_services(message)
-    elif message.text == 'Люди':
-        show_people(message)
-    elif message.text == 'Другое':
-        show_other(message)
+@bot.message_handler(commands=['timetable'])
+def help_command(message):
+    show_timetable(message)
+
+@bot.message_handler(commands=['duties'])
+def help_command(message):
+    show_duties(message)
+
+@bot.message_handler(commands=['squads'])
+def help_command(message):
+    show_squads(message)
+
+@bot.message_handler(commands=['services'])
+def help_command(message):
+    show_services(message)
+
+@bot.message_handler(commands=['people'])
+def help_command(message):
+    show_people(message)
+
+@bot.message_handler(commands=['other'])
+def help_command(message):
+    show_other(message)
 
 @bot.callback_query_handler(func = lambda call: call.data.split()[0] == 'other')
 def other_callback(call):

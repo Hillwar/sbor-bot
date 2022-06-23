@@ -26,3 +26,10 @@ class Tools:
     @staticmethod
     def in_range(value, min, max):
         return value >= min and value <= max
+
+    @staticmethod
+    def get_russian_number(number):
+        if not number:
+            return None
+
+        return '+7' + str(number)

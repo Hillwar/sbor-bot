@@ -1,5 +1,5 @@
 import enum
-
+from tools import Tools
 
 
 class Person:
@@ -17,10 +17,7 @@ class Person:
         return name + ' ' + surname if name_first else surname + ' ' + name
 
     def get_phone_number(self):
-        if not self.phone_number:
-            return None
-
-        return '+7' + str(self.phone_number)
+        return Tools.get_russian_number(self.phone_number)
 
     class Sort:
         def id(people): return people.id
@@ -52,8 +49,7 @@ class PersonRole:
         self.name = name
 
 class Service:
-    def __init__(self, id, name, supervisor_id):
-        self.id = id
+    def __init__(self, name, supervisor_id):
         self.name = name
         self.supervisor_id = supervisor_id
 
@@ -63,7 +59,7 @@ class Duty:
         self.commander_squad_id = commander_squad_id
 
     def get_commander_nickname(self):
-        return 'ДКС' if self.commander_squad_id is None else 'ДКО'
+        return 'ДКО' if self.commander_squad_id else 'ДКС'
 
 class Admin:
     def __init__(self, id, telegram, role_id):
@@ -80,3 +76,14 @@ class AdminRole:
         self.edit_timetable = edit_timetable
         self.edit_commanders = edit_commanders
         self.manage_admins = manage_admins
+
+class Info:
+    def __init__(self, number, dks_number, adress, location_link, vk_link):
+        self.number = number
+        self.dks_number = dks_number
+        self.adress = adress
+        self.location_link = location_link
+        self.vk_link = vk_link
+
+    def get_dks_number(self):
+        return Tools.get_russian_number(self.dks_number)

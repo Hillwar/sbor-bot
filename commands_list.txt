@@ -1,0 +1,9 @@
+sbor - Ответственные за сбор
+timetable - Расписание
+duties - Дежурные командиры
+squads - Отряды
+services - Службисты
+people - Люди
+other - Другое
+restart - Перезапустить бота
+help - Помощь

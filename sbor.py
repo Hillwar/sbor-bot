@@ -114,9 +114,11 @@ class Sbor:
 
     def get_duty_info(self, duty, info = Person.Info.Full):
         squad_id = duty.commander_squad_id
-        nickname = '*Дежурный Командир Сбора*' if squad_id == None else 'ДКО _\'' + self.get_squad(squad_id).name + '\'_'
+        is_dks = squad_id == None
+        nickname = '*Дежурный Командир Сбора*' if is_dks else 'ДКО _\'' + self.get_squad(squad_id).name + '\'_'
+        dks_number = self.__info.get_dks_number() if is_dks else ''
         commander = self.get_person(duty.commander_id)
-        return nickname + '\n' + self.get_person_info_one_line(commander, info)
+        return nickname + '\n' + self.get_person_info_one_line(commander, info) + ' ' + dks_number
 
     def get_duty_by_squad(self, squad_id):
         squad_duties = list(filter(lambda duty: duty.commander_squad_id == squad_id, self.__duties))
@@ -153,6 +155,21 @@ class Sbor:
             squad_info += '\n\n' if squad_info else ''
             squad_info += self.get_squad_info_compact(squad)
         return squad_info
+
+    def get_supervisors_info(self):
+        supervisors_info = ''
+        for supervisor in self.__supervisors:
+            supervisors_info += '\n\n' if supervisors_info else ''
+            supervisors_info += self.get_service_info(supervisor)
+        return supervisors_info
+
+    def get_sbor_info(self):
+        sbor_info = '*СБОР {}*\n\n'.format(self.__info.number)
+        sbor_info += self.get_supervisors_info() + '\n\n'
+        sbor_info += self.get_duty_info(self.get_duty_by_squad(None)) + '\n\n'
+        sbor_info += '*Адрес*\n[{}]({})\n\n'.format(self.__info.adress, self.__info.location_link)
+        sbor_info += '*Группа Вконтакте*\n[Ссылка]({})'.format(self.__info.vk_link)
+        return sbor_info
 
     def get_services_info(self):
         service_info = ''
@@ -255,4 +272,4 @@ class Sbor:
 
     def load(self):
         workbook = load_workbook(self.__excel_path, data_only=True)
-        self.__people, self.__squads, self.__duties, self.__services, self.__roles = get_sbor(workbook)
+        self.__people, self.__squads, self.__duties, self.__services, self.__roles, self.__supervisors, self.__info = get_sbor(workbook)
