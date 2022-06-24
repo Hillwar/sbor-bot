@@ -1,6 +1,6 @@
 from openpyxl import Workbook, load_workbook
 from people import Person, PersonRole, Service, Squad
-from parser import get_sbor, save_sbor
+from sbor_data_parser import get_sbor, save_sbor
 from tools import Tools
 class Sbor:
     def __init__(self, excel_path):
