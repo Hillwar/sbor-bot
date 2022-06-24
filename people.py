@@ -12,8 +12,15 @@ class Person:
         self.role_id = role_id
 
     def get_full_name(self, name_first = False):
-        name = self.name.capitalize()
-        surname = self.surname.capitalize()
+        def get_capitalized_name(name):
+            result = ''
+            for split_name in name.split():
+                result += ' ' if result else ''
+                result += split_name.capitalize()
+            return result
+
+        name = get_capitalized_name(self.name)
+        surname = get_capitalized_name(self.surname)
         return name + ' ' + surname if name_first else surname + ' ' + name
 
     def get_phone_number(self):

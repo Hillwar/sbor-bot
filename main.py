@@ -58,6 +58,7 @@ class Buttons:
     class Timetable:
         today = types.InlineKeyboardButton(text = 'Показать расписание на сегодня', callback_data = 'timetable today')
         sbor = types.InlineKeyboardButton(text = 'Показать расписание на сбор', callback_data = 'timetable sbor')
+        today_refresh = types.InlineKeyboardButton(text = 'Обновить', callback_data = 'timetable today')
 
     class Squads:
         all = types.InlineKeyboardButton(text = 'Все отряды', callback_data = 'squads show_squads')
@@ -85,8 +86,9 @@ class Markup:
     remove = types.ReplyKeyboardRemove()
 
     class Main:
-        show = types.ReplyKeyboardMarkup(resize_keyboard = True, row_width = 2)
-        show.add(Buttons.Main.timetable, Buttons.Main.commanders, Buttons.Main.squads, Buttons.Main.services, Buttons.Main.people, Buttons.Main.other)
+        show = types.ReplyKeyboardRemove()
+        # show = types.ReplyKeyboardMarkup(resize_keyboard = True, row_width = 2)
+        # show.add(Buttons.Main.timetable, Buttons.Main.commanders, Buttons.Main.squads, Buttons.Main.services, Buttons.Main.people, Buttons.Main.other)
 
     class Exit:
         admins_add_exit = types.ReplyKeyboardMarkup(resize_keyboard = True, row_width = 1)
@@ -138,11 +140,11 @@ class Markup:
         show.add(Buttons.Admins.list, Buttons.Admins.roles, Buttons.Admins.add, Buttons.Admins.edit_role, Buttons.Admins.remove, Buttons.General.cancel)
 
     class Timetable:
-        today = types.InlineKeyboardMarkup(row_width = 1)
-        today.add(Buttons.Timetable.today)
-
         sbor = types.InlineKeyboardMarkup(row_width = 1)
-        sbor.add(Buttons.Timetable.sbor)
+        sbor.add(Buttons.Timetable.today)
+
+        today = types.InlineKeyboardMarkup(row_width = 1)
+        today.add(Buttons.Timetable.sbor, Buttons.Timetable.today_refresh)
 
     class Squads:
         show = types.InlineKeyboardMarkup(row_width = 1)
@@ -198,7 +200,7 @@ def edit_photo(message, photo_path = None, photo = None, reply_markup = None, pa
 
 
 def show_timetable(message):
-    send_message(message.chat.id, photo_path = Resources.Timetable.today, reply_markup = Markup.Timetable.sbor)
+    send_message(message.chat.id, photo_path = Resources.Timetable.today, reply_markup = Markup.Timetable.today)
 
 def show_services(message):
     services_info = sbor.get_services_info()
@@ -231,7 +233,7 @@ def show_help(message):
 
 def show_sbor(message):
     sbor_info = sbor.get_sbor_info()
-    send_message(message.chat.id, photo_path = Resources.Images.background_5, text = sbor_info)
+    send_message(message.chat.id, photo_path = Resources.Images.background_2, text = sbor_info)
 
 @bot.message_handler(commands=['start'])
 def start_command(message):
@@ -342,9 +344,9 @@ def timetable_callback(call):
 def timetable_callback(call):
     keyword = call.data.split()[1]
     if keyword == 'today':
-        edit_photo(call.message, photo_path = Resources.Timetable.today, reply_markup = Markup.Timetable.sbor)
+        edit_photo(call.message, photo_path = Resources.Timetable.today, reply_markup = Markup.Timetable.today)
     elif keyword == 'sbor':
-        edit_photo(call.message, photo_path = Resources.Timetable.sbor, reply_markup = Markup.Timetable.today)
+        edit_photo(call.message, photo_path = Resources.Timetable.sbor, reply_markup = Markup.Timetable.sbor)
     bot.answer_callback_query(call.id)
 
 @bot.callback_query_handler(func = lambda call: call.data.split()[0] == 'squads')

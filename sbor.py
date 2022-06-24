@@ -112,13 +112,20 @@ class Sbor:
         supervisor = self.get_person(service.supervisor_id)
         return '*' + service.name + '*\n'+ self.get_person_info_one_line(supervisor, Person.Info.Full)
 
-    def get_duty_info(self, duty, info = Person.Info.Full):
+    def get_duty_info(self, duty, info = None):
         squad_id = duty.commander_squad_id
         is_dks = squad_id == None
         nickname = '*Дежурный Командир Сбора*' if is_dks else 'ДКО _\'' + self.get_squad(squad_id).name + '\'_'
-        dks_number = self.__info.get_dks_number() if is_dks else ''
+        info = Person.Info.Compact if is_dks and not info else info
+        info = Person.Info.Full if not info else info
         commander = self.get_person(duty.commander_id)
-        return nickname + '\n' + self.get_person_info_one_line(commander, info) + ' ' + dks_number
+
+        duty_info = nickname + '\n'
+        duty_info += self.get_person_info_one_line(commander, info)
+        if is_dks:
+            duty_info += ' ' + self.__info.get_dks_number()
+
+        return duty_info
 
     def get_duty_by_squad(self, squad_id):
         squad_duties = list(filter(lambda duty: duty.commander_squad_id == squad_id, self.__duties))
