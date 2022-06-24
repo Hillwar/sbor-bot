@@ -58,7 +58,7 @@ class Buttons:
     class Timetable:
         today = types.InlineKeyboardButton(text = 'Показать расписание на сегодня', callback_data = 'timetable today')
         sbor = types.InlineKeyboardButton(text = 'Показать расписание на сбор', callback_data = 'timetable sbor')
-        today_refresh = types.InlineKeyboardButton(text = 'Обновить', callback_data = 'timetable today')
+        today_refresh = types.InlineKeyboardButton(text = 'Обновить', callback_data = 'timetable today_refresh')
 
     class Squads:
         all = types.InlineKeyboardButton(text = 'Все отряды', callback_data = 'squads show_squads')
