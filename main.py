@@ -772,10 +772,7 @@ def public_poll(message):
         return
 
     for user in users.get_users():
-        if user == message.chat.id:
-            continue
-        else:
-            send_message(user, poll=message.poll, reply_markup=Markup.Main.show)
+        send_message(user, poll=message.poll, reply_markup=Markup.Main.show)
 
     send_message(message.chat.id, text='Опрос опубликовано!', reply_markup=Markup.Main.show)
 
