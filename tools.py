@@ -1,3 +1,6 @@
+import sys
+
+
 class Tools:
     @staticmethod
     def get_index(index, max_index, left_bracket='', right_bracket=''):
@@ -35,14 +38,15 @@ class Tools:
 
     @staticmethod
     def log(message=None, call=None):
-        print("<!------!>")
-        from datetime import datetime
-        print(datetime.now())
-        if message:
-            print("Сообщение от {0} {1} (id = {2}) \n {3}".format(message.from_user.first_name,
-                                                                  message.from_user.last_name,
-                                                                  str(message.from_user.id), message.text))
-        else:
-            print("Команда от {0} {1} (id = {2}) \n {3}".format(call.from_user.first_name,
-                                                                call.from_user.last_name,
-                                                                str(call.from_user.id), call.data))
+        if "log" in sys.argv:
+            print("<!------!>")
+            from datetime import datetime
+            print(datetime.now())
+            if message:
+                print("Сообщение от {0} {1} (id = {2}) \n {3}".format(message.from_user.first_name,
+                                                                      message.from_user.last_name,
+                                                                      str(message.from_user.id), message.text))
+            else:
+                print("Команда от {0} {1} (id = {2}) \n {3}".format(call.from_user.first_name,
+                                                                    call.from_user.last_name,
+                                                                    str(call.from_user.id), call.data))
