@@ -3,6 +3,7 @@ from re import I
 import telebot
 import config
 
+from tools import Tools
 from config import Resources
 from sbor import Sbor
 from people import Person
@@ -268,6 +269,7 @@ def show_sbor(message):
 
 @bot.message_handler(commands=['start'])
 def start_command(message):
+    Tools.log(message=message)
     users.add_user(message.from_user.id)
     users.save()
     send_message(message.chat.id, text='Привет!', reply_markup=Markup.Main.show)
@@ -275,62 +277,74 @@ def start_command(message):
 
 @bot.message_handler(commands=['restart'])
 def restart_command(message):
+    Tools.log(message=message)
     start_command(message)
 
 
 @bot.message_handler(commands=['edit'], is_admin=True)
 def edit_command(message):
+    Tools.log(message=message)
     show_edit(message)
 
 
 @bot.message_handler(commands=['admins'], is_admin=True)
 def admins_command(message):
+    Tools.log(message=message)
     show_admins(message)
 
 
 @bot.message_handler(commands=['help'])
 def help_command(message):
+    Tools.log(message=message)
     show_help(message)
 
 
 @bot.message_handler(commands=['sbor'])
 def help_command(message):
+    Tools.log(message=message)
     show_sbor(message)
 
 
 @bot.message_handler(commands=['timetable'])
 def help_command(message):
+    Tools.log(message=message)
     show_timetable(message)
 
 
 @bot.message_handler(commands=['duties'])
 def help_command(message):
+    Tools.log(message=message)
     show_duties(message)
 
 
 @bot.message_handler(commands=['squads'])
 def help_command(message):
+    Tools.log(message=message)
     show_squads(message)
 
 
 @bot.message_handler(commands=['services'])
 def help_command(message):
+    Tools.log(message=message)
     show_services(message)
 
 
 @bot.message_handler(commands=['people'])
 def help_command(message):
+    Tools.log(message=message)
     show_people(message)
 
 
 @bot.message_handler(commands=['other'])
 def help_command(message):
+    Tools.log(message=message)
     show_other(message)
 
 
 @bot.callback_query_handler(func=lambda call: call.data.split()[0] == 'other')
 def other_callback(call):
     keyword = call.data.split()[1]
+    Tools.log(call=call)
     if keyword == 'search':
         bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                       reply_markup=None)
@@ -357,6 +371,7 @@ def other_callback(call):
 @bot.callback_query_handler(func=lambda call: call.data.split()[0] == 'edit', is_admin=True)
 def edit_callback(call):
     keyword = call.data.split()[1]
+    Tools.log(call=call)
     if keyword == 'timetable':
         bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                       reply_markup=None)
@@ -376,6 +391,7 @@ def edit_callback(call):
 @bot.callback_query_handler(func=lambda call: call.data.split()[0] == 'admins')
 def timetable_callback(call):
     keyword = call.data.split()[1]
+    Tools.log(call=call)
     if keyword == 'list':
         edit_message(call.message, text='*Список админов*')
         for admin in admins.get_admins_info():
@@ -408,6 +424,7 @@ def timetable_callback(call):
 @bot.callback_query_handler(func=lambda call: call.data.split()[0] == 'timetable')
 def timetable_callback(call):
     keyword = call.data.split()[1]
+    Tools.log(call=call)
     if keyword == 'today':
         edit_photo(call.message, photo_path=Resources.Timetable.today, reply_markup=Markup.Timetable.today)
     elif keyword == 'sbor':
@@ -418,6 +435,7 @@ def timetable_callback(call):
 @bot.callback_query_handler(func=lambda call: call.data.split()[0] == 'squads')
 def squads_callback(call):
     keyword = call.data.split()[1]
+    Tools.log(call=call)
     if keyword == 'show_squad':
         squad_id = int(call.data[-1:])
         squad = sbor.get_squad(squad_id)
@@ -436,6 +454,7 @@ def squads_callback(call):
 @bot.callback_query_handler(func=lambda call: call.data.split()[0] == 'people')
 def people_callback(call):
     keyword = call.data.split()[1]
+    Tools.log(call=call)
     if keyword == 'sort':
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id,
                                       reply_markup=Markup.People.sort(call.from_user))
@@ -451,6 +470,7 @@ def people_callback(call):
 @bot.callback_query_handler(func=lambda call: call.data.split()[0] == 'people_sort')
 def people_sort_callback(call):
     keyword = call.data.split()[1]
+    Tools.log(call=call)
     info = Person.Info.Compact
     if keyword == 'id':
         edit_message(call.message, text=sbor.get_all_people_info(Person.Sort.id, info),
@@ -466,11 +486,13 @@ def people_sort_callback(call):
 
 @bot.callback_query_handler(func=lambda call: call.data.split()[0] == 'cancel')
 def people_group_callback(call):
+    Tools.log(call=call)
     bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
     bot.answer_callback_query(call.id)
 
 
 def save_photo(message, path):
+    Tools.log(message=message)
     if not message.photo:
         return False
 
@@ -483,6 +505,7 @@ def save_photo(message, path):
 
 
 def edit_timetable(message):
+    Tools.log(message=message)
     if message.text and (message.text == 'Выход из режима изменения расписания' or message.text == 'Отмена'):
         send_message(message.chat.id, text='Отмена изменений', reply_markup=Markup.Main.show)
         return
@@ -498,6 +521,7 @@ def edit_timetable(message):
 
 
 def edit_commanders(message):
+    Tools.log(message=message)
     if not message.text:
         send_message(message.chat.id, text='Вы не передали ID новых коммандиров. Повторите.',
                      reply_markup=Markup.Exit.commander_edit_exit)
@@ -531,6 +555,7 @@ def edit_commanders(message):
 
 
 def edit_role_of_admins(message):
+    Tools.log(message=message)
     if not message.text:
         send_message(message.chat.id, text='Вы не передали ID админа и ID новой роли. Повторите.',
                      reply_markup=Markup.Exit.admins_edit_role_exit)
@@ -572,6 +597,7 @@ def edit_role_of_admins(message):
 
 
 def add_admin(message):
+    Tools.log(message=message)
     if not message.text:
         send_message(message.chat.id, text='Вы не передали Telegram админа и ID его роли. Повторите.',
                      reply_markup=Markup.Exit.admins_add_exit)
@@ -609,6 +635,7 @@ def add_admin(message):
 
 
 def remove_admin(message):
+    Tools.log(message=message)
     if not message.text:
         send_message(message.chat.id, text='Вы не передали ID админа. Повторите.',
                      reply_markup=Markup.Exit.admins_remove_exit)
@@ -644,6 +671,7 @@ def remove_admin(message):
 
 
 def find_people(message):
+    Tools.log(message=message)
     if not message.text:
         send_message(message.chat.id,
                      text='Вы не передали данные для поиска человека. Нужно передать имя и/или фамилию человека. Повторите.',
@@ -686,6 +714,7 @@ def find_people(message):
 
 
 def public_message(message):
+    Tools.log(message=message)
     if not message.text and not message.photo:
         send_message(message.chat.id, text='Вы не передали текст для публикации. Повторите.',
                      reply_markup=Markup.Exit.public_message_exit)

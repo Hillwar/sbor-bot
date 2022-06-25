@@ -24,7 +24,7 @@ class Tools:
 
     @staticmethod
     def in_range(value, min, max):
-        return value >= min and value <= max
+        return min <= value <= max
 
     @staticmethod
     def get_russian_number(number):
@@ -32,3 +32,17 @@ class Tools:
             return None
 
         return '+7' + str(number)
+
+    @staticmethod
+    def log(message=None, call=None):
+        print("<!------!>")
+        from datetime import datetime
+        print(datetime.now())
+        if message:
+            print("Сообщение от {0} {1} (id = {2}) \n {3}".format(message.from_user.first_name,
+                                                                  message.from_user.last_name,
+                                                                  str(message.from_user.id), message.text))
+        else:
+            print("Команда от {0} {1} (id = {2}) \n {3}".format(call.from_user.first_name,
+                                                                call.from_user.last_name,
+                                                                str(call.from_user.id), call.data))
