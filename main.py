@@ -48,6 +48,7 @@ class Buttons:
         edit = types.InlineKeyboardButton(text='Изменить данные', callback_data='other edit')
         admins = types.InlineKeyboardButton(text='Управление админами', callback_data='other admins')
         message = types.InlineKeyboardButton(text='Опубликовать сообщение', callback_data='other message')
+        poll = types.InlineKeyboardButton(text='Опубликовать опрос', callback_data='other poll')
 
     class Edit:
         timetable = types.InlineKeyboardButton(text='Изменить расписание', callback_data='edit timetable')
@@ -118,6 +119,9 @@ class Markup:
         public_message_exit = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
         public_message_exit.add(types.KeyboardButton(text='Выход из режима публикации сообщения'))
 
+        public_poll_exit = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
+        public_poll_exit.add(types.KeyboardButton(text='Выход из режима публикации опроса'))
+
     class Other:
         def show(user):
             markup = types.InlineKeyboardMarkup(row_width=1)
@@ -127,6 +131,8 @@ class Markup:
                 markup.add(Buttons.Other.edit)
             if is_right_user(user, admins.get_users_who_can_public_messages()):
                 markup.add(Buttons.Other.message)
+            if is_right_user(user, admins.get_users_who_can_public_messages()):
+                markup.add(Buttons.Other.poll)
             markup.add(Buttons.Other.search, Buttons.General.cancel)
             return markup
 
@@ -177,13 +183,18 @@ class Markup:
             return markup
 
 
-def send_message(id, photo_path=None, photo=None, text=None, reply_markup=None, parse_mode='Markdown'):
+def send_message(id, photo_path=None, photo=None, text=None, poll=None, reply_markup=None, parse_mode='Markdown'):
     if photo:
         return bot.send_photo(chat_id=id, photo=photo, caption=text, reply_markup=reply_markup, parse_mode=parse_mode)
     elif photo_path:
         with open(photo_path, 'rb') as photo:
             return bot.send_photo(chat_id=id, photo=photo, caption=text, reply_markup=reply_markup,
                                   parse_mode=parse_mode)
+    elif poll:
+        return bot.send_poll(chat_id=id, question=poll.question, options=poll.options, is_anonymous=poll.is_anonymous,
+                             type=poll.type, allows_multiple_answers=poll.allows_multiple_answers,
+                             correct_option_id=poll.correct_option_id, explanation=poll.explanation,
+                             reply_markup=reply_markup)
     else:
         return bot.send_message(chat_id=id, text=text, reply_markup=reply_markup, parse_mode=parse_mode)
 
@@ -365,6 +376,13 @@ def other_callback(call):
     elif keyword == 'admins':
         bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                       reply_markup=Markup.Admins.show)
+    elif keyword == 'poll':
+        bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                      reply_markup=None)
+        message = send_message(call.message.chat.id,
+                               text='Отправьте опрос, который хотите передать всему сбору.\n*Отправку нельзя отменить! Будьте бдительны!*',
+                               reply_markup=Markup.Exit.public_poll_exit)
+        bot.register_next_step_handler(message, public_poll)
     bot.answer_callback_query(call.id)
 
 
@@ -739,6 +757,27 @@ def public_message(message):
             send_message(user, text=message.text, reply_markup=Markup.Main.show)
 
     send_message(message.chat.id, text='Сообщение опубликовано!', reply_markup=Markup.Main.show)
+
+
+def public_poll(message):
+    Tools.log(message=message)
+    if not message.poll:
+        send_message(message.chat.id, text='Вы не передали опрос для публикации. Повторите.',
+                     reply_markup=Markup.Exit.public_poll_exit)
+        bot.register_next_step_handler(message, public_poll)
+        return
+
+    if message.text == 'Выход из режима публикации опроса' or message.text == 'Отмена':
+        send_message(message.chat.id, text='Отмена публикации опроса', reply_markup=Markup.Main.show)
+        return
+
+    for user in users.get_users():
+        if user == message.chat.id:
+            continue
+        else:
+            send_message(user, poll=message.poll, reply_markup=Markup.Main.show)
+
+    send_message(message.chat.id, text='Опрос опубликовано!', reply_markup=Markup.Main.show)
 
 
 bot.polling(none_stop=True)
