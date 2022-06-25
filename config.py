@@ -1,10 +1,12 @@
 TOKEN = '5248759255:AAF9LH5NoSFcTj2r_obycP2uPjoashqvMM8'
 
+
 class Paths:
     resource = 'resource'
     data = resource + '/data'
     images = resource + '/images'
     timetable = resource + '/timetable'
+
 
 class Resources:
     class Timetable:
@@ -19,7 +21,6 @@ class Resources:
         background_5 = Paths.images + '/background_5.jpg'
         background_gay = Paths.images + '/background_gay_special.jpg'
         temporary = Paths.images + '/temporary.png'
-
 
     class Data:
         sbor = Paths.data + '/sbor_data.xlsx'

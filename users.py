@@ -3,6 +3,7 @@ from people import Admin, AdminRole
 from sbor_data_parser import get_users, save_users, save_admins, get_admins
 from tools import Tools
 
+
 class Users:
     def __init__(self, document_path):
         self.__document_path = document_path
@@ -47,7 +48,7 @@ class Admins:
         return self.__roles[id - 1]
 
     def can_role_of_admin(self, admin, predicate):
-        role =  self.get_role(admin.role_id)
+        role = self.get_role(admin.role_id)
         return predicate(role)
 
     def get_users_who_can(self, role_predicate):
@@ -129,19 +130,21 @@ class Admins:
 
     def get_admin_info(self, admin):
         role = self.get_role(admin.role_id)
-        return  'Telegram: `' + admin.telegram + '`\n'\
-                'ID: `' + str(admin.id) + '`\n'\
-                'Роль: ' + role.name
+        return 'Telegram: `' + admin.telegram + '`\n' \
+                                                'ID: `' + str(admin.id) + '`\n' \
+                                                                          'Роль: ' + role.name
 
     def get_role_info(self, role):
-        return  'Роль _\'' + role.name + '\'_\n'\
-                'ID: `' + str(role.id) + '`\n'\
-                'Может делать рассылку: ' + Tools.bool_to_russian(role.public_messages) + '\n'\
-                'Может видеть ID участников: ' + Tools.bool_to_russian(role.see_ids) + '\n'\
-                'Может изменять командиров: ' + Tools.bool_to_russian(role.edit_commanders) + '\n'\
-                'Может изменять расписание: ' + Tools.bool_to_russian(role.edit_timetable) + '\n'\
-                'Может изменять админов: ' + Tools.bool_to_russian(role.manage_admins)
-
+        return 'Роль _\'' + role.name + '\'_\n' \
+                                        'ID: `' + str(role.id) + '`\n' \
+                                                                 'Может делать рассылку: ' + Tools.bool_to_russian(
+            role.public_messages) + '\n' \
+                                    'Может видеть ID участников: ' + Tools.bool_to_russian(role.see_ids) + '\n' \
+                                                                                                           'Может изменять командиров: ' + Tools.bool_to_russian(
+            role.edit_commanders) + '\n' \
+                                    'Может изменять расписание: ' + Tools.bool_to_russian(role.edit_timetable) + '\n' \
+                                                                                                                 'Может изменять админов: ' + Tools.bool_to_russian(
+            role.manage_admins)
 
     def get_roles_info(self):
         roles = list(self.__roles)

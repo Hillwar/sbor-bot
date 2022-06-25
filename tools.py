@@ -1,6 +1,6 @@
 class Tools:
     @staticmethod
-    def get_index(index, max_index, left_bracket = '', right_bracket = ''):
+    def get_index(index, max_index, left_bracket='', right_bracket=''):
         if max_index > 999:
             return '{}{:04}{}'.format(left_bracket, index, right_bracket)
         elif max_index > 99:
@@ -13,7 +13,6 @@ class Tools:
     @staticmethod
     def bool_to_russian(value):
         return 'Да' if value else 'Нет'
-
 
     @staticmethod
     def check_list_for(list, predicate):
