@@ -118,12 +118,11 @@ class Sbor:
         supervisor = self.get_person(service.supervisor_id)
         return '*' + service.name + '*\n' + self.get_person_info_one_line(supervisor, Person.Info.Full)
 
-    def get_duty_info(self, duty, info=None):
+    def get_duty_info(self, duty):
         squad_id = duty.commander_squad_id
         is_dks = squad_id == None
         nickname = '*Дежурный Командир Сбора*' if is_dks else 'ДКО _\'' + self.get_squad(squad_id).name + '\'_'
-        info = Person.Info.Compact if is_dks and not info else info
-        info = Person.Info.Full if not info else info
+        info = Person.Info.Compact if is_dks else Person.Info.Full
         commander = self.get_person(duty.commander_id)
 
         duty_info = nickname + '\n'
@@ -191,11 +190,11 @@ class Sbor:
             service_info += self.get_service_info(service)
         return service_info
 
-    def get_duties_info(self, info=Person.Info.Full):
+    def get_duties_info(self):
         duties_info = ''
         for duty in self.__duties:
             duties_info += '\n\n' if duties_info else ''
-            duties_info += self.get_duty_info(duty, info)
+            duties_info += self.get_duty_info(duty)
         return duties_info
 
     def get_people_info_by_ids(self, people_ids, info=Person.Info.Compact):
@@ -221,7 +220,7 @@ class Sbor:
         return grouped_people
 
     def get_all_people_info(self, sort, info=Person.Info.Compact, name_first=False):
-        people = list(self.__people)
+        people = self.get_people(lambda person: person.squad_id)
         people.sort(key=sort)
         return '*Список участников*\n' + self.get_people_info(people, info, name_first)
 
