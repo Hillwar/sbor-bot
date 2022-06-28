@@ -5,8 +5,8 @@ from tools import Tools
 class Person:
     def __init__(self, id, name, surname, phone_number, squad_id, role_id):
         self.id = id
-        self.name = name.lower()
-        self.surname = surname.lower()
+        self.name = name.lower() if name else ''
+        self.surname = surname.lower() if surname else ''
         self.phone_number = phone_number
         self.squad_id = squad_id
         self.role_id = role_id
@@ -21,6 +21,12 @@ class Person:
 
         name = get_capitalized_name(self.name)
         surname = get_capitalized_name(self.surname)
+        if not name:
+            return surname
+
+        if not surname:
+            return name
+
         return name + ' ' + surname if name_first else surname + ' ' + name
 
     def get_phone_number(self):
@@ -33,6 +39,10 @@ class Person:
 
         def surname(people): return people.surname
 
+    @staticmethod
+    def sort(people, key):
+        return people.sort(key=key)
+
     class Filter:
         def id(id): return lambda person: person.id == id
 
@@ -43,6 +53,10 @@ class Person:
         def squad_id(squad_id): return lambda person: person.squad_id == squad_id
 
         def role_id(role_id): return lambda person: person.role_id == role_id
+
+    @staticmethod
+    def filter(people, key):
+        return list(filter(key, people))
 
     class Info(enum.Enum):
         Compact = 1
@@ -59,9 +73,10 @@ class Squad:
 
 
 class PersonRole:
-    def __init__(self, id, name):
+    def __init__(self, id, name, plural):
         self.id = id
         self.name = name
+        self.plural = plural
 
 
 class Service:
@@ -70,7 +85,7 @@ class Service:
         self.supervisor_id = supervisor_id
 
 
-class Duty:
+class Commander:
     def __init__(self, commander_id, commander_squad_id):
         self.commander_id = commander_id
         self.commander_squad_id = commander_squad_id

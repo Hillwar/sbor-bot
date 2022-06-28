@@ -65,6 +65,9 @@ class Buttons:
         sbor = types.InlineKeyboardButton(text='Показать расписание на сбор', callback_data='timetable sbor')
         today_refresh = types.InlineKeyboardButton(text='Обновить', callback_data='timetable today_refresh')
 
+    class Commanders:
+        refresh = types.InlineKeyboardButton(text='Обновить', callback_data='commanders refresh')
+
     class Squads:
         all = types.InlineKeyboardButton(text='Все отряды', callback_data='squads show_squads')
         concrete = []
@@ -159,6 +162,10 @@ class Markup:
         today = types.InlineKeyboardMarkup(row_width=1)
         today.add(Buttons.Timetable.sbor, Buttons.Timetable.today_refresh)
 
+    class Commanders:
+        show = types.InlineKeyboardMarkup(row_width=1)
+        show.add(Buttons.Commanders.refresh)
+
     class Squads:
         show = types.InlineKeyboardMarkup(row_width=1)
         for squad in Buttons.Squads.concrete:
@@ -240,14 +247,14 @@ def show_squads(message):
     send_message(message.chat.id, photo_path=Resources.Images.background_1, reply_markup=Markup.Squads.show)
 
 
-def show_duties(message):
-    duties_info = sbor.get_duties_info()
-    send_message(message.chat.id, photo_path=Resources.Images.background_5, text=duties_info)
+def show_commanders(message):
+    commanders_info = sbor.get_commanders_info()
+    send_message(message.chat.id, photo_path=Resources.Images.background_5, text=commanders_info, reply_markup=Markup.Commanders.show)
 
 
 def show_people(message):
     info = Person.Info.Compact
-    send_message(message.chat.id, text=sbor.get_all_people_info(Person.Sort.surname, info),
+    send_message(message.chat.id, text=sbor.get_squad_people_info(Person.Sort.surname, info),
                  reply_markup=Markup.People.show)
 
 
@@ -320,10 +327,10 @@ def help_command(message):
     show_timetable(message)
 
 
-@bot.message_handler(commands=['duties'])
+@bot.message_handler(commands=['commanders'])
 def help_command(message):
     Tools.log(message=message)
-    show_duties(message)
+    show_commanders(message)
 
 
 @bot.message_handler(commands=['squads'])
@@ -441,6 +448,16 @@ def timetable_callback(call):
     bot.answer_callback_query(call.id)
 
 
+@bot.callback_query_handler(func=lambda call: call.data.split()[0] == 'commanders')
+def timetable_callback(call):
+    keyword = call.data.split()[1]
+    Tools.log(call=call)
+    if keyword == 'refresh':
+        commanders_info = sbor.get_commanders_info()
+        edit_message(call.message, text=commanders_info, reply_markup=Markup.Commanders.show)
+    bot.answer_callback_query(call.id)
+
+
 @bot.callback_query_handler(func=lambda call: call.data.split()[0] == 'squads')
 def squads_callback(call):
     keyword = call.data.split()[1]
@@ -485,10 +502,10 @@ def people_sort_callback(call):
         edit_message(call.message, text=sbor.get_all_people_info(Person.Sort.id, info),
                      reply_markup=Markup.People.sort(call.from_user))
     elif keyword == 'name':
-        edit_message(call.message, text=sbor.get_all_people_info(Person.Sort.name, info, name_first=True),
+        edit_message(call.message, text=sbor.get_squad_people_info(Person.Sort.name, info, name_first=True),
                      reply_markup=Markup.People.sort(call.from_user))
     elif keyword == 'surname':
-        edit_message(call.message, text=sbor.get_all_people_info(Person.Sort.surname, info),
+        edit_message(call.message, text=sbor.get_squad_people_info(Person.Sort.surname, info),
                      reply_markup=Markup.People.sort(call.from_user))
     bot.answer_callback_query(call.id)
 
@@ -568,7 +585,7 @@ def edit_commanders(message):
 
     result, error = sbor.edit_commanders(ids[0], ids[1:])
     if result:
-        send_message(message.chat.id, text=sbor.get_duties_info(), reply_markup=Markup.Main.show)
+        send_message(message.chat.id, text=sbor.get_commanders_info(), reply_markup=Markup.Main.show)
         send_message(message.chat.id, text='Информация сохранена!')
         sbor.save()
     else:
@@ -708,7 +725,7 @@ def find_people(message):
     keys = message.text.split()
     if len(keys) > 2:
         send_message(message.chat.id,
-                     text='Передано слишком много аргументов. Нужно передать только имя и/или фамилию человека. Повторите.')
+                     text='Передано слишком много аргументов. Нужно передать только имя и/или фамилию человека. Повторите.', reply_markup=Markup.Exit.people_search_exit)
         bot.register_next_step_handler(message, find_people)
         return
 
@@ -717,13 +734,19 @@ def find_people(message):
             if len(keys) == 1 and is_right_user(message.from_user, admins.get_users_who_can_see_ids()):
                 break
             send_message(message.chat.id,
-                         text='Вы передали числа. Нужно передать имя и/или фамилию человека. Повторите.')
+                        text='Вы передали числа. Нужно передать имя и/или фамилию человека. Повторите.', reply_markup=Markup.Exit.people_search_exit)
+            bot.register_next_step_handler(message, find_people)
+            return
+
+        if len(key) < 3:
+            send_message(message.chat.id,
+                        text='Нужно передать больше 2-ух символов для поиска человека. Повторите.', reply_markup=Markup.Exit.people_search_exit)
             bot.register_next_step_handler(message, find_people)
             return
 
     people = sbor.find_people(keys)
     if not people:
-        send_message(message.chat.id, text='Не найдено ни одного человека. Повторите.')
+        send_message(message.chat.id, text='Не найдено ни одного человека. Повторите.', reply_markup=Markup.Exit.people_search_exit)
         bot.register_next_step_handler(message, find_people)
         return
 

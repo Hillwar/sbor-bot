@@ -1,6 +1,6 @@
 sbor - Основная информация о сборе
 timetable - Расписание
-duties - Дежурные командиры
+commanders - Дежурные командиры
 squads - Отряды
 services - Службисты
 people - Люди

@@ -1,4 +1,4 @@
-from people import Admin, AdminRole, Service, Person, PersonRole, Squad, Duty, Info
+from people import Admin, AdminRole, Service, Person, PersonRole, Squad, Commander, Info
 
 
 def get_cell_value(sheet, col, row):
@@ -93,20 +93,22 @@ def get_sbor(workbook):
         roles = []
         id_col = 1
         name_col = 2
+        plural_col = 3
         row = first_row
 
         while get_cell_value(sheet, id_col, row):
             id = get_cell_value(sheet, id_col, row)
             name = get_cell_value(sheet, name_col, row)
+            plural = get_cell_value(sheet, plural_col, row)
 
-            role = PersonRole(id, name)
+            role = PersonRole(id, name, plural)
             roles.append(role)
             row += 1
 
         return roles
 
-    def parse_duties(sheet):
-        duties = []
+    def parse_commanders(sheet):
+        commanders = []
         commander_id_col = 2
         commander_squad_id_col = 3
         row = first_row
@@ -115,27 +117,11 @@ def get_sbor(workbook):
             commander_id = get_cell_value(sheet, commander_id_col, row)
             commander_squad_id = get_cell_value(sheet, commander_squad_id_col, row)
 
-            duty = Duty(commander_id, commander_squad_id)
-            duties.append(duty)
+            commander = Commander(commander_id, commander_squad_id)
+            commanders.append(commander)
             row += 1
 
-        return duties
-
-    def parse_duties(sheet):
-        duties = []
-        commander_id_col = 2
-        commander_squad_id_col = 3
-        row = first_row
-
-        while get_cell_value(sheet, commander_id_col, row):
-            commander_id = get_cell_value(sheet, commander_id_col, row)
-            commander_squad_id = get_cell_value(sheet, commander_squad_id_col, row)
-
-            duty = Duty(commander_id, commander_squad_id)
-            duties.append(duty)
-            row += 1
-
-        return duties
+        return commanders
 
     def parse_info(sheet):
         number_row = 3
@@ -155,19 +141,19 @@ def get_sbor(workbook):
 
     people = parse_people(workbook.get_sheet_by_name('People'))
     squads = parse_squads(workbook.get_sheet_by_name('Squads'))
-    duties = parse_duties(workbook.get_sheet_by_name('Duty'))
+    commanders = parse_commanders(workbook.get_sheet_by_name('Commanders'))
     services = parse_services(workbook.get_sheet_by_name('Services'))
     roles = parse_roles(workbook.get_sheet_by_name('Roles'))
     supervisors = parse_supervisors(workbook.get_sheet_by_name('Supervisors'))
     info = parse_info(workbook.get_sheet_by_name('Info'))
 
-    return people, squads, duties, services, roles, supervisors, info
+    return people, squads, commanders, services, roles, supervisors, info
 
 
-def save_sbor(workbook, path, duties):
+def save_sbor(workbook, path, commanders):
     first_row = 3
 
-    def set_duties(sheet, duties):
+    def set_commanders(sheet, commanders):
         commander_id_col = 2
         commander_squad_id_col = 3
         row = first_row
@@ -175,9 +161,9 @@ def save_sbor(workbook, path, duties):
         while get_cell_value(sheet, commander_id_col, row):
             commander_squad_id = get_cell_value(sheet, commander_squad_id_col, row)
             commander_saved = False
-            for duty in duties:
-                if commander_squad_id == duty.commander_squad_id:
-                    set_cell_value(sheet, commander_id_col, row, duty.commander_id)
+            for commander in commanders:
+                if commander_squad_id == commander.commander_squad_id:
+                    set_cell_value(sheet, commander_id_col, row, commander.commander_id)
                     commander_saved = True
                     break
 
@@ -186,7 +172,7 @@ def save_sbor(workbook, path, duties):
 
             row += 1
 
-    set_duties(workbook.get_sheet_by_name('Duty'), duties)
+    set_commanders(workbook.get_sheet_by_name('Commanders'), commanders)
     workbook.save(path)
 
 
