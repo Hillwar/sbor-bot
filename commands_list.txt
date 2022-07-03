@@ -1,6 +1,6 @@
-sbor - Основная информация о сборе
+sbor - Сбор
 timetable - Расписание
-commanders - Дежурные командиры
+commanders - Дежурные
 squads - Отряды
 services - Службисты
 people - Люди
