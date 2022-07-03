@@ -1,5 +1,4 @@
-TOKEN = '5248759255:AAF9LH5NoSFcTj2r_obycP2uPjoashqvMM8'
-
+TOKEN = '5393211268:AAE4FCSHsf1HICn7Y0MBi4zc68uWVn8ObOc'
 
 class Paths:
     resource = 'resource'

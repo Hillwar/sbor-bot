@@ -93,6 +93,9 @@ class Commander:
     def get_commander_nickname(self):
         return 'ДКО' if self.commander_squad_id else 'ДКС'
 
+class DutySquad:
+    def __init__(self, squad_id):
+        self.squad_id = squad_id
 
 class Admin:
     def __init__(self, id, telegram, role_id):
