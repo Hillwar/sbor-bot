@@ -18,8 +18,6 @@ class Resources:
         background_3 = Paths.images + '/background_3.jpg'
         background_4 = Paths.images + '/background_4.jpg'
         background_5 = Paths.images + '/background_5.jpg'
-        background_gay = Paths.images + '/background_gay_special.jpg'
-        temporary = Paths.images + '/temporary.png'
 
     class Data:
         sbor = Paths.data + '/sbor_data.xlsx'
