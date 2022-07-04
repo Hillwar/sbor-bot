@@ -773,7 +773,10 @@ def forward_message_to_all(message):
     for user in users.get_users():
         if user == message.chat.id:
             continue
-        bot.forward_message(user, message.chat.id, message.message_id)
+        try:
+            bot.forward_message(user, message.chat.id, message.message_id)
+        except Exception:
+            users.remove_user(user)
 
 
 bot.polling(none_stop=True)

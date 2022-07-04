@@ -16,6 +16,13 @@ class Users:
         self.__users.add(user)
         return True
 
+    def remove_user(self, user):
+        if user not in self.__users:
+            return False
+
+        self.__users.remove(user)
+        return True
+
     def get_users(self):
         return list(self.__users)
 
