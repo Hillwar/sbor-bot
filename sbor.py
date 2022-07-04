@@ -197,14 +197,6 @@ class Sbor:
             commanders_info += self.get_commander_info(commander)
         return commanders_info
 
-    def get_duty_squad_info(self):
-        duty_squad_info = '*Дежурный отряд*\n'
-        if not self.__duty_squad.squad_id:
-            duty_squad_info += 'Сборная'
-        else:
-            duty_squad_info += self.get_squad(self.__duty_squad.squad_id).name
-        return duty_squad_info
-
     def get_people_info_by_ids(self, people_ids, info=Person.Info.Compact):
         people = []
         for id in people_ids:
@@ -301,5 +293,5 @@ class Sbor:
 
     def load(self):
         workbook = load_workbook(self.__excel_path, data_only=True)
-        self.__people, self.__squads, self.__commanders, self.__services, self.__roles, self.__supervisors, self.__info, self.__duty_squad = get_sbor(
+        self.__people, self.__squads, self.__commanders, self.__services, self.__roles, self.__supervisors, self.__info = get_sbor(
             workbook)
