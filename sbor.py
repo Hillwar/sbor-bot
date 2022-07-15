@@ -121,13 +121,11 @@ class Sbor:
         squad_id = commander.commander_squad_id
         is_dks = squad_id == None
         nickname = '*Дежурный Командир Сбора*' if is_dks else 'ДКО _\'' + self.get_squad(squad_id).name + '\'_'
-        info = Person.Info.Compact if is_dks else Person.Info.Full
+        info = Person.Info.Full
         commander = self.get_person(commander.commander_id)
 
         commander_info = nickname + '\n'
         commander_info += self.get_person_info_one_line(commander, info)
-        if is_dks:
-            commander_info += ' ' + self.__info.get_dks_number()
 
         return commander_info
 
