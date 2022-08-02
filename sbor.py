@@ -1,13 +1,11 @@
-from openpyxl import Workbook, load_workbook
 from people import Person, PersonRole, Service, Squad
-from sbor_data_parser import get_sbor, save_sbor
+from sbor_data_parser import get_sbor
 from tools import Tools
 
 
 class Sbor:
-    def __init__(self, excel_path):
-        self.__excel_path = excel_path
-        self.load()
+    def __init__(self, service):
+        self.load(service)
 
     def get_people_count(self):
         return len(self.__people)
@@ -149,7 +147,7 @@ class Sbor:
 
         return people_grouped
 
-    def get_people_info_grouped_by_roles(self, people, info = Person.Info.Compact):
+    def get_people_info_grouped_by_roles(self, people, info=Person.Info.Compact):
         people_info = ''
         people_grouped = self.get_people_grouped_by_roles(people)
         for role_index in range(1, self.get_roles_count() + 1):
@@ -285,11 +283,6 @@ class Sbor:
 
         return True, ""
 
-    def save(self):
-        workbook = load_workbook(self.__excel_path)
-        save_sbor(workbook, self.__excel_path, self.__commanders)
-
-    def load(self):
-        workbook = load_workbook(self.__excel_path, data_only=True)
+    def load(self, service):
         self.__people, self.__squads, self.__commanders, self.__services, self.__roles, self.__supervisors, self.__info = get_sbor(
-            workbook)
+            service)

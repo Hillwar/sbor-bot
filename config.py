@@ -1,8 +1,9 @@
 TOKEN = '5539809650:AAHs5klO3qZy10OMLkrTS_SJ5QdBN4WnCcs'
+spreadsheet_id = '1WnmZeMH7uOJ3tz9YgyClo9wFUGulasIeR7dBg7-ZzaY'
+
 
 class Paths:
     resource = 'resource'
-    data = resource + '/data'
     images = resource + '/images'
     timetable = resource + '/timetable'
 
@@ -20,6 +21,4 @@ class Resources:
         background_5 = Paths.images + '/background_5.jpg'
 
     class Data:
-        sbor = Paths.data + '/sbor_data.xlsx'
-        admins = Paths.data + '/admins.xlsx'
-        users = Paths.data + '/users.txt'
+        pass

@@ -5,9 +5,8 @@ from tools import Tools
 
 
 class Users:
-    def __init__(self, document_path):
-        self.__document_path = document_path
-        self.load()
+    def __init__(self, service):
+        self.load(service)
 
     def add_user(self, user):
         if user in self.__users:
@@ -38,9 +37,8 @@ class Users:
 
 
 class Admins:
-    def __init__(self, excel_path):
-        self.__excel_path = excel_path
-        self.load()
+    def __init__(self, service):
+        self.load(service)
 
     def get_admins_count(self):
         return len(self.__admins)
@@ -172,9 +170,7 @@ class Admins:
         return admins_info
 
     def save(self):
-        workbook = load_workbook(self.__excel_path)
-        save_admins(workbook, self.__excel_path, self.__admins)
+        save_admins(self.__admins)
 
     def load(self):
-        workbook = load_workbook(self.__excel_path, data_only=True)
-        self.__admins, self.__roles = get_admins(workbook)
+        self.__admins, self.__roles = get_admins()

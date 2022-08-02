@@ -1,18 +1,35 @@
 from people import Admin, AdminRole, DutySquad, Service, Person, PersonRole, Squad, Commander, Info
+from config import spreadsheet_id
 
+service = None
 
 def get_cell_value(sheet, col, row):
-    value = sheet.cell(row=row, column=col).value
-    return value
+    value = service.spreadsheets().values().get(
+        spreadsheetId=spreadsheet_id,
+        range=f"{sheet}!{chr(64 + col)}{row}:{chr(64 + col)}{row}",
+        majorDimension='COLUMNS'
+    ).execute()
+    return value["values"][0][0]
 
 
 def set_cell_value(sheet, col, row, value):
-    sheet.cell(row=row, column=col, value=value)
+    service.spreadsheets().values().batchUpdate(
+        spreadsheetId=spreadsheet_id,
+        body={
+            "valueInputOption": "USER_ENTERED",
+            "data": [
+                {"range": f"{sheet}!{chr(64 + col)}{row}:{chr(64 + col)}{row}",
+                 "majorDimension": "ROWS",
+                 "values": [[value]]}
+            ]
+        }
+    ).execute()
 
 
-def get_sbor(workbook):
+def get_sbor(serv):
+    global service
+    service = serv
     first_row = 3
-
     def parse_people(sheet):
         people = []
         id_col = 1
@@ -139,18 +156,18 @@ def get_sbor(workbook):
 
         return Info(number, dks_number, adress, location_link, vk_link)
 
-    people = parse_people(workbook.get_sheet_by_name('People'))
-    squads = parse_squads(workbook.get_sheet_by_name('Squads'))
-    commanders = parse_commanders(workbook.get_sheet_by_name('Commanders'))
-    services = parse_services(workbook.get_sheet_by_name('Services'))
-    roles = parse_roles(workbook.get_sheet_by_name('Roles'))
-    supervisors = parse_supervisors(workbook.get_sheet_by_name('Supervisors'))
-    info = parse_info(workbook.get_sheet_by_name('Info'))
+    people = parse_people('People')
+    squads = parse_squads('Squads')
+    commanders = parse_commanders('Commanders')
+    services = parse_services('Services')
+    roles = parse_roles('Roles')
+    supervisors = parse_supervisors('Supervisors')
+    info = parse_info('Info')
 
     return people, squads, commanders, services, roles, supervisors, info
 
 
-def save_sbor(workbook, path, commanders):
+def save_sbor(commanders):
     first_row = 3
 
     def set_commanders(sheet, commanders):
@@ -172,11 +189,10 @@ def save_sbor(workbook, path, commanders):
 
             row += 1
 
-    set_commanders(workbook.get_sheet_by_name('Commanders'), commanders)
-    workbook.save(path)
+    set_commanders('Commanders', commanders)
 
 
-def get_admins(workbook):
+def get_admins():
     first_row = 3
 
     def parse_admins(sheet):
@@ -234,13 +250,13 @@ def get_admins(workbook):
 
         return adminRoles
 
-    admins = parse_admins(workbook.get_sheet_by_name('Admins'))
-    roles = parse_roles(workbook.get_sheet_by_name('Roles'))
+    admins = parse_admins('Admins')
+    roles = parse_roles('Roles')
 
     return admins, roles
 
 
-def save_admins(workbook, path, admins):
+def save_admins(admins):
     first_row = 3
 
     def set_admins(sheet, admins):
@@ -259,8 +275,7 @@ def save_admins(workbook, path, admins):
         set_cell_value(sheet, telegram_col, row, '')
         set_cell_value(sheet, role_id_col, row, '')
 
-    set_admins(workbook.get_sheet_by_name('Admins'), admins)
-    workbook.save(path)
+    set_admins('Admins', admins)
 
 
 def get_users(file):

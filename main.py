@@ -3,6 +3,8 @@ from re import I
 import telebot
 import config
 
+from sbor_config import create_service
+
 from tools import Tools
 from config import Resources
 from sbor import Sbor
@@ -11,9 +13,10 @@ from telebot import types
 from users import Admins, Users
 
 bot = telebot.TeleBot(config.TOKEN)
-sbor = Sbor(Resources.Data.sbor)
-admins = Admins(Resources.Data.admins)
-users = Users(Resources.Data.users)
+service = create_service()
+sbor = Sbor(service)
+admins = Admins(service)
+users = Users(service)
 
 
 def is_right_user(user, right_usernames):
