@@ -1,5 +1,5 @@
 import httplib2
-import apiclient.discovery
+from googleapiclient import discovery
 from oauth2client.service_account import ServiceAccountCredentials
 
 
@@ -10,4 +10,4 @@ def create_service():
         ['https://www.googleapis.com/auth/spreadsheets',
          'https://www.googleapis.com/auth/drive'])
     httpAuth = credentials.authorize(httplib2.Http())
-    return apiclient.discovery.build('sheets', 'v4', http=httpAuth)
+    return discovery.build('sheets', 'v4', http=httpAuth)

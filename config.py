@@ -1,6 +1,9 @@
 TOKEN = '5539809650:AAHs5klO3qZy10OMLkrTS_SJ5QdBN4WnCcs'
-spreadsheet_id = '1WnmZeMH7uOJ3tz9YgyClo9wFUGulasIeR7dBg7-ZzaY'
 
+class SpreadsheetIds:
+    sbor = '1WnmZeMH7uOJ3tz9YgyClo9wFUGulasIeR7dBg7-ZzaY'
+    solovki = '10VZiPOPbtZG1WIHnSbgBhC2EyrLoOtYbA0w42QUgWgg'
+    admins = '1OobMpULpQvhQAXi3SGf_mOQTLPHizvDlrXyIFWgloZU'
 
 class Paths:
     resource = 'resource'

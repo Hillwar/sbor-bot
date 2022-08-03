@@ -140,16 +140,13 @@ class Admins:
                                                                           'Роль: ' + role.name
 
     def get_role_info(self, role):
-        return 'Роль _\'' + role.name + '\'_\n' \
-                                        'ID: `' + str(role.id) + '`\n' \
-                                                                 'Может делать рассылку: ' + Tools.bool_to_russian(
-            role.public_messages) + '\n' \
-                                    'Может видеть ID участников: ' + Tools.bool_to_russian(role.see_ids) + '\n' \
-                                                                                                           'Может изменять командиров: ' + Tools.bool_to_russian(
-            role.edit_commanders) + '\n' \
-                                    'Может изменять расписание: ' + Tools.bool_to_russian(role.edit_timetable) + '\n' \
-                                                                                                                 'Может изменять админов: ' + Tools.bool_to_russian(
-            role.manage_admins)
+        return  'Роль _\'' + role.name + '\'_\n' \
+                'ID: `' + str(role.id) + '`\n' \
+                'Может делать рассылку: ' + Tools.bool_to_russian(role.public_messages) + '\n' \
+                'Может видеть ID участников: ' + Tools.bool_to_russian(role.see_ids) + '\n' \
+                'Может изменять командиров: ' + Tools.bool_to_russian(role.edit_commanders) + '\n' \
+                'Может изменять расписание: ' + Tools.bool_to_russian(role.edit_timetable) + '\n' \
+                'Может изменять админов: ' + Tools.bool_to_russian(role.manage_admins)
 
     def get_roles_info(self):
         roles = list(self.__roles)

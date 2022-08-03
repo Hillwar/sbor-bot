@@ -1,35 +1,12 @@
+import imp
 from people import Admin, AdminRole, DutySquad, Service, Person, PersonRole, Squad, Commander, Info
-from config import spreadsheet_id
-
-service = None
-
-def get_cell_value(sheet, col, row):
-    value = service.spreadsheets().values().get(
-        spreadsheetId=spreadsheet_id,
-        range=f"{sheet}!{chr(64 + col)}{row}:{chr(64 + col)}{row}",
-        majorDimension='COLUMNS'
-    ).execute()
-    return value["values"][0][0]
+from google_parser import Parser
+from config import SpreadsheetIds
 
 
-def set_cell_value(sheet, col, row, value):
-    service.spreadsheets().values().batchUpdate(
-        spreadsheetId=spreadsheet_id,
-        body={
-            "valueInputOption": "USER_ENTERED",
-            "data": [
-                {"range": f"{sheet}!{chr(64 + col)}{row}:{chr(64 + col)}{row}",
-                 "majorDimension": "ROWS",
-                 "values": [[value]]}
-            ]
-        }
-    ).execute()
-
-
-def get_sbor(serv):
-    global service
-    service = serv
+def get_sbor(google_service, spreadsheet_id):
     first_row = 3
+
     def parse_people(sheet):
         people = []
         id_col = 1
@@ -38,19 +15,17 @@ def get_sbor(serv):
         phone_col = 4
         squad_id_col = 5
         role_id_col = 6
-        row = first_row
 
-        while get_cell_value(sheet, id_col, row):
-            id = get_cell_value(sheet, id_col, row)
-            surname = get_cell_value(sheet, surname_col, row)
-            name = get_cell_value(sheet, name_col, row)
-            phone = get_cell_value(sheet, phone_col, row)
-            squad_id = get_cell_value(sheet, squad_id_col, row)
-            role_id = get_cell_value(sheet, role_id_col, row)
+        for i in range(first_row, Parser.get_row_length(sheet) + 1):
+            id = Parser.get_cell_value(sheet, id_col, i)
+            surname = Parser.get_cell_value(sheet, surname_col, i)
+            name = Parser.get_cell_value(sheet, name_col, i)
+            phone = Parser.get_cell_value(sheet, phone_col, i)
+            squad_id = Parser.get_cell_value(sheet, squad_id_col, i)
+            role_id = Parser.get_cell_value(sheet, role_id_col, i)
 
             person = Person(id, name, surname, phone, squad_id, role_id)
             people.append(person)
-            row += 1
 
         return people
 
@@ -58,15 +33,13 @@ def get_sbor(serv):
         supervisors = []
         name_col = 1
         supervisor_id_col = 2
-        row = first_row
 
-        while get_cell_value(sheet, name_col, row):
-            name = get_cell_value(sheet, name_col, row)
-            supervisor_id = get_cell_value(sheet, supervisor_id_col, row)
+        for i in range(first_row, Parser.get_row_length(sheet) + 1):
+            name = Parser.get_cell_value(sheet, name_col, i)
+            supervisor_id = Parser.get_cell_value(sheet, supervisor_id_col, i)
 
             supervisor = Service(name, supervisor_id)
             supervisors.append(supervisor)
-            row += 1
 
         return supervisors
 
@@ -76,17 +49,15 @@ def get_sbor(serv):
         name_col = 2
         vozhatiy_id_col = 3
         komsorg_id_col = 4
-        row = first_row
 
-        while get_cell_value(sheet, id_col, row):
-            id = get_cell_value(sheet, id_col, row)
-            name = get_cell_value(sheet, name_col, row)
-            vozhatiy_id = get_cell_value(sheet, vozhatiy_id_col, row)
-            komsorg_id = get_cell_value(sheet, komsorg_id_col, row)
+        for i in range(first_row, Parser.get_row_length(sheet) + 1):
+            id = Parser.get_cell_value(sheet, id_col, i)
+            name = Parser.get_cell_value(sheet, name_col, i)
+            vozhatiy_id = Parser.get_cell_value(sheet, vozhatiy_id_col, i)
+            komsorg_id = Parser.get_cell_value(sheet, komsorg_id_col, i)
 
             squad = Squad(id, name, vozhatiy_id, komsorg_id)
             squads.append(squad)
-            row += 1
 
         return squads
 
@@ -94,15 +65,13 @@ def get_sbor(serv):
         services = []
         name_col = 1
         supervisor_id_col = 2
-        row = first_row
 
-        while get_cell_value(sheet, name_col, row):
-            name = get_cell_value(sheet, name_col, row)
-            supervisor_id = get_cell_value(sheet, supervisor_id_col, row)
+        for i in range(first_row, Parser.get_row_length(sheet) + 1):
+            name = Parser.get_cell_value(sheet, name_col, i)
+            supervisor_id = Parser.get_cell_value(sheet, supervisor_id_col, i)
 
             service = Service(name, supervisor_id)
             services.append(service)
-            row += 1
 
         return services
 
@@ -111,16 +80,14 @@ def get_sbor(serv):
         id_col = 1
         name_col = 2
         plural_col = 3
-        row = first_row
 
-        while get_cell_value(sheet, id_col, row):
-            id = get_cell_value(sheet, id_col, row)
-            name = get_cell_value(sheet, name_col, row)
-            plural = get_cell_value(sheet, plural_col, row)
+        for i in range(first_row, Parser.get_row_length(sheet) + 1):
+            id = Parser.get_cell_value(sheet, id_col, i)
+            name = Parser.get_cell_value(sheet, name_col, i)
+            plural = Parser.get_cell_value(sheet, plural_col, i)
 
             role = PersonRole(id, name, plural)
             roles.append(role)
-            row += 1
 
         return roles
 
@@ -128,15 +95,13 @@ def get_sbor(serv):
         commanders = []
         commander_id_col = 2
         commander_squad_id_col = 3
-        row = first_row
 
-        while get_cell_value(sheet, commander_id_col, row):
-            commander_id = get_cell_value(sheet, commander_id_col, row)
-            commander_squad_id = get_cell_value(sheet, commander_squad_id_col, row)
+        for i in range(first_row, Parser.get_row_length(sheet) + 1):
+            commander_id = Parser.get_cell_value(sheet, commander_id_col, i)
+            commander_squad_id = Parser.get_cell_value(sheet, commander_squad_id_col, i)
 
             commander = Commander(commander_id, commander_squad_id)
             commanders.append(commander)
-            row += 1
 
         return commanders
 
@@ -148,51 +113,51 @@ def get_sbor(serv):
         vk_link_row = 7
         col = 2
 
-        number = get_cell_value(sheet, col, number_row)
-        dks_number = get_cell_value(sheet, col, dks_number_row)
-        adress = get_cell_value(sheet, col, adress_row)
-        location_link = get_cell_value(sheet, col, location_link_row)
-        vk_link = get_cell_value(sheet, col, vk_link_row)
+        number = Parser.get_cell_value(sheet, col, number_row)
+        dks_number = Parser.get_cell_value(sheet, col, dks_number_row)
+        adress = Parser.get_cell_value(sheet, col, adress_row)
+        location_link = Parser.get_cell_value(sheet, col, location_link_row)
+        vk_link = Parser.get_cell_value(sheet, col, vk_link_row)
 
         return Info(number, dks_number, adress, location_link, vk_link)
 
-    people = parse_people('People')
-    squads = parse_squads('Squads')
-    commanders = parse_commanders('Commanders')
-    services = parse_services('Services')
-    roles = parse_roles('Roles')
-    supervisors = parse_supervisors('Supervisors')
-    info = parse_info('Info')
+    people = parse_people(Parser.get_google_sheet(google_service, spreadsheet_id, 'People', 'A', 'F', 1))
+    squads = parse_squads(Parser.get_google_sheet(google_service, spreadsheet_id, 'Squads', 'A', 'D', 1))
+    commanders = parse_commanders(Parser.get_google_sheet(google_service, spreadsheet_id, 'Commanders', 'A', 'C', 1))
+    services = parse_services(Parser.get_google_sheet(google_service, spreadsheet_id, 'Services', 'A', 'B', 1))
+    roles = parse_roles(Parser.get_google_sheet(google_service, spreadsheet_id, 'Roles', 'A', 'C', 1))
+    supervisors = parse_supervisors(Parser.get_google_sheet(google_service, spreadsheet_id, 'Supervisors', 'A', 'B', 1))
+    info = parse_info(Parser.get_google_sheet(google_service, spreadsheet_id, 'Info', 'A', 'B', 1))
+
 
     return people, squads, commanders, services, roles, supervisors, info
 
 
-def save_sbor(commanders):
+def save_sbor(google_service, spreadsheet_id, commanders):
     first_row = 3
 
     def set_commanders(sheet, commanders):
         commander_id_col = 2
         commander_squad_id_col = 3
-        row = first_row
 
-        while get_cell_value(sheet, commander_id_col, row):
-            commander_squad_id = get_cell_value(sheet, commander_squad_id_col, row)
+        for i in range(first_row, Parser.get_row_length(sheet) + 1):
+            commander_squad_id = Parser.get_cell_value(sheet, commander_squad_id_col, i)
             commander_saved = False
             for commander in commanders:
                 if commander_squad_id == commander.commander_squad_id:
-                    set_cell_value(sheet, commander_id_col, row, commander.commander_id)
+                    Parser.set_cell_value(sheet, commander_id_col, i, commander.commander_id)
                     commander_saved = True
                     break
 
-            if not commander_saved:
+            if commander_saved:
+                Parser.set_google_sheet(google_service, spreadsheet_id, 'Commanders', sheet, 'A', 'C', 1)
+            else:
                 raise Exception("Can't save all commanders")
 
-            row += 1
-
-    set_commanders('Commanders', commanders)
+    set_commanders(Parser.get_google_sheet(google_service, spreadsheet_id, 'Commanders', 'A', 'C', 1), commanders)
 
 
-def get_admins():
+def get_admins(google_service, spreadsheet_id):
     first_row = 3
 
     def parse_admins(sheet):
@@ -200,16 +165,14 @@ def get_admins():
         id_col = 1
         telegram_col = 2
         role_id_col = 3
-        row = first_row
 
-        while get_cell_value(sheet, id_col, row):
-            id = get_cell_value(sheet, id_col, row)
-            telegram = get_cell_value(sheet, telegram_col, row)
-            role_id = get_cell_value(sheet, role_id_col, row)
+        for i in range(first_row, Parser.get_row_length(sheet) + 1):
+            id = Parser.get_cell_value(sheet, id_col, i)
+            telegram = Parser.get_cell_value(sheet, telegram_col, i)
+            role_id = Parser.get_cell_value(sheet, role_id_col, i)
 
             admin = Admin(id, telegram, role_id)
             admins.append(admin)
-            row += 1
 
         return admins
 
@@ -222,19 +185,18 @@ def get_admins():
         edit_timetable_col = 5
         edit_commanders_col = 6
         edit_admins_col = 7
-        row = first_row
 
         def role_right_to_bool(right):
             return True if right == '+' else False
 
-        while get_cell_value(sheet, id_col, row):
-            id = get_cell_value(sheet, id_col, row)
-            name = get_cell_value(sheet, name_col, row)
-            public_messages = get_cell_value(sheet, public_messages_col, row)
-            see_ids = get_cell_value(sheet, see_ids_col, row)
-            edit_timetable = get_cell_value(sheet, edit_timetable_col, row)
-            edit_commanders = get_cell_value(sheet, edit_commanders_col, row)
-            manage_admins = get_cell_value(sheet, edit_admins_col, row)
+        for i in range(first_row, Parser.get_row_length(sheet) + 1):
+            id = Parser.get_cell_value(sheet, id_col, i)
+            name = Parser.get_cell_value(sheet, name_col, i)
+            public_messages = Parser.get_cell_value(sheet, public_messages_col, i)
+            see_ids = Parser.get_cell_value(sheet, see_ids_col, i)
+            edit_timetable = Parser.get_cell_value(sheet, edit_timetable_col, i)
+            edit_commanders = Parser.get_cell_value(sheet, edit_commanders_col, i)
+            manage_admins = Parser.get_cell_value(sheet, edit_admins_col, i)
 
             adminRole = AdminRole(
                 id=id,
@@ -246,17 +208,17 @@ def get_admins():
                 manage_admins=role_right_to_bool(manage_admins)
             )
             adminRoles.append(adminRole)
-            row += 1
 
         return adminRoles
 
-    admins = parse_admins('Admins')
-    roles = parse_roles('Roles')
+
+    admins = parse_admins(Parser.get_google_sheet(google_service, spreadsheet_id, 'Admins', 'A', 'C', 1))
+    roles = parse_roles(Parser.get_google_sheet(google_service, spreadsheet_id, 'Roles', 'A', 'G', 1))
 
     return admins, roles
 
 
-def save_admins(admins):
+def save_admins(admins, google_service, spreadsheet_id):
     first_row = 3
 
     def set_admins(sheet, admins):
@@ -266,16 +228,15 @@ def save_admins(admins):
         row = first_row
 
         for admin in admins:
-            set_cell_value(sheet, id_col, row, admin.id)
-            set_cell_value(sheet, telegram_col, row, admin.telegram)
-            set_cell_value(sheet, role_id_col, row, admin.role_id)
+            Parser.set_cell_value(sheet, id_col, row, admin.id)
+            Parser.set_cell_value(sheet, telegram_col, row, admin.telegram)
+            Parser.set_cell_value(sheet, role_id_col, row, admin.role_id)
             row += 1
 
-        set_cell_value(sheet, id_col, row, '')
-        set_cell_value(sheet, telegram_col, row, '')
-        set_cell_value(sheet, role_id_col, row, '')
+        Parser.set_google_sheet(google_service, spreadsheet_id, 'Admins', sheet, 'A', 'C', 1)
 
-    set_admins('Admins', admins)
+    Parser.clear_google_sheet(google_service, spreadsheet_id, 'Admins', 'A', 'C', 3)
+    set_admins(Parser.get_google_sheet(google_service, spreadsheet_id, 'Admins', 'A', 'C', 1), admins)
 
 
 def get_users(file):

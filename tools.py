@@ -1,6 +1,5 @@
 import sys
 
-
 class Tools:
     @staticmethod
     def get_index(index, max_index, left_bracket='', right_bracket=''):

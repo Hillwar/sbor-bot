@@ -252,7 +252,7 @@ def show_squads(message):
 
 def show_commanders(message):
     commanders_info = sbor.get_commanders_info()
-    send_message(message.chat.id, photo_path=Resources.Images.background_5, text=commanders_info, reply_markup=Markup.Commanders.show)
+    send_message(message.chat.id, photo_path=Resources.Images.background_4, text=commanders_info, reply_markup=Markup.Commanders.show)
 
 
 def show_people(message):
@@ -262,19 +262,19 @@ def show_people(message):
 
 
 def show_other(message):
-    send_message(message.chat.id, photo_path=Resources.Images.background_4,
+    send_message(message.chat.id, photo_path=Resources.Images.background_5,
                  reply_markup=Markup.Other.show(message.from_user))
 
 
 def show_edit(message):
     if is_right_user(message.from_user, admins.get_users_who_can_edit_something()):
-        send_message(message.chat.id, photo_path=Resources.Images.background_4,
+        send_message(message.chat.id, photo_path=Resources.Images.background_5,
                      reply_markup=Markup.Edit.show(message.from_user))
 
 
 def show_admins(message):
     if is_right_user(message.from_user, admins.get_users_who_can_manage_admins()):
-        send_message(message.chat.id, photo_path=Resources.Images.background_4, reply_markup=Markup.Admins.show)
+        send_message(message.chat.id, photo_path=Resources.Images.background_5, reply_markup=Markup.Admins.show)
 
 
 def show_help(message):
