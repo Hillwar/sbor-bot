@@ -1,27 +1,15 @@
-from curses.ascii import SO
-from curses.panel import bottom_panel
 import enum
-from re import T
-from config import Bot, BotType
-from sbor import Sbor
 from tools import Tools
 
 
 class Person:
-    def __init__(self, id, name, surname, phone_number, squad_id, role_id):
-        self.id = id
+    def __init__(self, id, name, surname, phone_number, squad_id, role_id = None):
+        self.id = int(id)
         self.name = name.lower() if name else ''
         self.surname = surname.lower() if surname else ''
-        self.phone_number = phone_number
-        self.squad_id = squad_id
-        self.role_id = role_id
-
-    def __init__(self, id, name, surname, phone_number, squad_id):
-        self.id = id
-        self.name = name.lower() if name else ''
-        self.surname = surname.lower() if surname else ''
-        self.phone_number = phone_number
-        self.squad_id = squad_id
+        self.phone_number = int(phone_number)
+        self.squad_id = int(squad_id) if squad_id else None
+        self.role_id = int(role_id) if role_id else None
 
     def get_full_name(self, name_first=False):
         def get_capitalized_name(name):
@@ -77,16 +65,11 @@ class Person:
 
 
 class Squad:
-    def __init__(self, id, name, vozhatiy_id, komsorg_id):
-        self.id = id
-        self.name = name
-        self.vozhatiy_id = vozhatiy_id
-        self.komsorg_id = komsorg_id
-
-    def __init__(self, id, name, supervisor_id):
+    def __init__(self, id, name, supervisor_id, vozhatiy_id = None):
         self.id = id
         self.name = name
         self.supervisor_id = supervisor_id
+        self.vozhatiy_id = vozhatiy_id
 
 
 class PersonRole:
@@ -103,15 +86,9 @@ class Service:
 
 
 class Commander:
-    def __init__(self, commander_id, commander_squad_id):
+    def __init__(self, commander_id, commander_squad_id = None):
         self.commander_id = commander_id
         self.commander_squad_id = commander_squad_id
-
-    def get_commander_nickname(self):
-        if Bot.type == BotType.Sbor:
-            return 'ДКО' if self.commander_squad_id else 'ДКС'
-        elif Bot.type == BotType.Solovki:
-            return 'ДКЛ'
 
 
 class DutySquad:
@@ -137,7 +114,7 @@ class AdminRole:
 
 
 class Info:
-    def __init__(self, number, main_commander_number, adress, location_link, vk_link, tg_chat_link):
+    def __init__(self, number, main_commander_number, adress = None, location_link = None, vk_link = None, tg_chat_link = None):
         self.number = number
         self.main_commander_number = main_commander_number
         self.adress = adress

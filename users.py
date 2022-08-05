@@ -1,6 +1,7 @@
 from openpyxl import Workbook, load_workbook
 from people import Admin, AdminRole
-from parser.sbor_data_parser import get_users, save_users, save_admins, get_admins
+from parse.users_parser import get_users, save_users
+from parse.admins_parser import save_admins, get_admins
 from tools import Tools
 
 

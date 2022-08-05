@@ -1,5 +1,5 @@
-from excel_parser import Parser
-from people import DutySquad, Service, Person, PersonRole, Squad, Commander, Infos
+from parse.excel_parser import Parser
+from people import DutySquad, Service, Person, PersonRole, Squad, Commander, Info
 
 def get_sbor(workbook):
     first_row = 3
@@ -128,7 +128,7 @@ def get_sbor(workbook):
         location_link = Parser.get_cell_value(sheet, col, location_link_row)
         vk_link = Parser.get_cell_value(sheet, col, vk_link_row)
 
-        return SborInfo(number, dks_number, adress, location_link, vk_link)
+        return Info(number, dks_number, adress, location_link, vk_link)
 
     people = parse_people(workbook.get_sheet_by_name('People'))
     squads = parse_squads(workbook.get_sheet_by_name('Squads'))

@@ -1,4 +1,4 @@
-from excel_parser import Parser
+from parse.excel_parser import Parser
 from people import Admin, AdminRole
 
 def get_admins(workbook):

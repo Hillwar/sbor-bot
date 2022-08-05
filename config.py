@@ -1,12 +1,12 @@
 import enum
-TOKEN = '5539809650:AAHs5klO3qZy10OMLkrTS_SJ5QdBN4WnCcs'
+TOKEN = '5508630690:AAFjqP2r7m-v0iGHv5eDN14YZ6cdKea5B70'
 
 class BotType(enum.Enum):
     Sbor = 1
     Solovki = 2
 
 class Bot:
-    type = BotType.Sbor
+    type = BotType.Solovki
 
 class Paths:
     resource = 'resource'
@@ -28,6 +28,10 @@ class Resources:
         background_5 = Paths.images + '/background_5.jpg'
 
     class Data:
-        excel = Paths.data + '/sbor_data.xlsx'
+        if Bot.type == BotType.Sbor:
+            excel = Paths.data + '/sbor_data.xlsx'
+        elif Bot.type == BotType.Solovki:
+            excel = Paths.data + '/solovki_data.xlsx'
+
         admins = Paths.data + '/admins.xlsx'
         users = Paths.data + '/users.txt'

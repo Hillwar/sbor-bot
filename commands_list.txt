@@ -7,3 +7,13 @@ people - Люди
 other - Другое
 restart - Перезапустить бота
 help - Помощь
+
+solovki - Соловки
+timetable - Расписание
+commanders - Дежурные
+squads - Тройки
+services - Службисты
+people - Люди
+other - Другое
+restart - Перезапустить бота
+help - Помощь

@@ -5,13 +5,13 @@ import config
 
 from tools import Tools
 from config import Resources
-from solovki import Solovki
+from sbor import Sbor
 from people import Person
 from telebot import types
 from users import Admins, Users
 
 bot = telebot.TeleBot(config.TOKEN)
-solovki = Solovki(Resources.Data.excel)
+sbor = Sbor(Resources.Data.excel)
 admins = Admins(Resources.Data.admins)
 users = Users(Resources.Data.users)
 
@@ -63,9 +63,9 @@ class Buttons:
         concrete = []
         hide_buttons = types.InlineKeyboardButton(text='Скрыть кнопки', callback_data='squads hide_buttons')
         show_buttons = types.InlineKeyboardButton(text='Показать кнопки', callback_data='squads show_buttons')
-        for squad_id in range(1, solovki.get_squads_count() + 1):
-            # buttons_squad.append(types.KeyboardButton('Отряд \'' + solovki.get_squad(squad_id).name + '\''))
-            concrete.append(types.InlineKeyboardButton(text='Тройка \'' + solovki.get_squad(squad_id).name + '\'',
+        for squad_id in range(1, sbor.get_squads_count() + 1):
+            # buttons_squad.append(types.KeyboardButton('Отряд \'' + sbor.get_squad(squad_id).name + '\''))
+            concrete.append(types.InlineKeyboardButton(text='Тройка \'' + sbor.get_squad(squad_id).name + '\'',
                                                        callback_data='squads show_squad ' + str(squad_id)))
 
     class People:
@@ -144,8 +144,8 @@ class Markup:
                  Buttons.Admins.remove, Buttons.General.cancel)
 
     class Timetable:
-        solovki = types.InlineKeyboardMarkup(row_width=1)
-        solovki.add(Buttons.Timetable.today)
+        sbor = types.InlineKeyboardMarkup(row_width=1)
+        sbor.add(Buttons.Timetable.today)
 
         today = types.InlineKeyboardMarkup(row_width=1)
         today.add(Buttons.Timetable.today_refresh)
@@ -227,7 +227,7 @@ def show_timetable(message):
 
 
 def show_services(message):
-    services_info = solovki.get_services_info()
+    services_info = sbor.get_services_info()
     send_message(message.chat.id, photo_path=Resources.Images.background_3, text=services_info)
 
 
@@ -236,13 +236,13 @@ def show_squads(message):
 
 
 def show_commanders(message):
-    commanders_info = solovki.get_commanders_info()
+    commanders_info = sbor.get_commanders_info()
     send_message(message.chat.id, photo_path=Resources.Images.background_5, text=commanders_info, reply_markup=Markup.Commanders.show)
 
 
 def show_people(message):
     info = Person.Info.Compact
-    send_message(message.chat.id, text=solovki.get_squad_people_info(Person.Sort.surname, info),
+    send_message(message.chat.id, text=sbor.get_squad_people_info(Person.Sort.surname, info),
                  reply_markup=Markup.People.show)
 
 
@@ -267,7 +267,7 @@ def show_help(message):
 
 
 def show_sbor(message):
-    sbor_info = solovki.get_solovki_info()
+    sbor_info = sbor.get_sbor_info()
     send_message(message.chat.id, photo_path=Resources.Images.background_2, text=sbor_info)
 
 
@@ -303,7 +303,7 @@ def help_command(message):
     show_help(message)
 
 
-@bot.message_handler(commands=['solovki'])
+@bot.message_handler(commands=['sbor'])
 def help_command(message):
     Tools.log(message=message)
     show_sbor(message)
@@ -431,6 +431,8 @@ def timetable_callback(call):
     Tools.log(call=call)
     if keyword == 'today':
         edit_photo(call.message, photo_path=Resources.Timetable.today, reply_markup=Markup.Timetable.today)
+    elif keyword == 'sbor':
+        edit_photo(call.message, photo_path=Resources.Timetable.sbor, reply_markup=Markup.Timetable.sbor)
     bot.answer_callback_query(call.id)
 
 
@@ -439,7 +441,7 @@ def timetable_callback(call):
     keyword = call.data.split()[1]
     Tools.log(call=call)
     if keyword == 'refresh':
-        commanders_info = solovki.get_commanders_info()
+        commanders_info = sbor.get_commanders_info()
         edit_message(call.message, text=commanders_info, reply_markup=Markup.Commanders.show)
     bot.answer_callback_query(call.id)
 
@@ -450,8 +452,8 @@ def squads_callback(call):
     Tools.log(call=call)
     if keyword == 'show_squad':
         squad_id = int(call.data[-1:])
-        squad = solovki.get_squad(squad_id)
-        squad_info = solovki.get_squad_info_with_people(squad)
+        squad = sbor.get_squad(squad_id)
+        squad_info = sbor.get_squad_info_with_people(squad)
         edit_message(call.message, text=squad_info, reply_markup=Markup.Squads.hide)
     elif keyword == 'hide_buttons':
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=Markup.Squads.hide)
@@ -482,13 +484,13 @@ def people_sort_callback(call):
     Tools.log(call=call)
     info = Person.Info.Compact
     if keyword == 'id':
-        edit_message(call.message, text=solovki.get_all_people_info(Person.Sort.id, info),
+        edit_message(call.message, text=sbor.get_all_people_info(Person.Sort.id, info),
                      reply_markup=Markup.People.sort(call.from_user))
     elif keyword == 'name':
-        edit_message(call.message, text=solovki.get_squad_people_info(Person.Sort.name, info, name_first=True),
+        edit_message(call.message, text=sbor.get_squad_people_info(Person.Sort.name, info, name_first=True),
                      reply_markup=Markup.People.sort(call.from_user))
     elif keyword == 'surname':
-        edit_message(call.message, text=solovki.get_squad_people_info(Person.Sort.surname, info),
+        edit_message(call.message, text=sbor.get_squad_people_info(Person.Sort.surname, info),
                      reply_markup=Markup.People.sort(call.from_user))
     bot.answer_callback_query(call.id)
 
@@ -560,17 +562,17 @@ def edit_commanders(message):
     for id_string in id_strings:
         if not id_string.isdigit():
             send_message(message.chat.id,
-                         text='Вы должны передать ID командиров. Повторите.'.format(solovki.get_people_count()))
+                         text='Вы должны передать ID командиров. Повторите.'.format(sbor.get_people_count()))
             bot.register_next_step_handler(message, edit_commanders)
             return
         id = int(id_string)
         ids.append(id)
 
-    result, error = solovki.edit_commanders(ids[0], ids[1:])
+    result, error = sbor.edit_commanders(ids[0], ids[1:])
     if result:
-        send_message(message.chat.id, text=solovki.get_commanders_info(), reply_markup=Markup.Main.show)
+        send_message(message.chat.id, text=sbor.get_commanders_info(), reply_markup=Markup.Main.show)
         send_message(message.chat.id, text='Информация сохранена!')
-        solovki.save()
+        sbor.save()
     else:
         send_message(message.chat.id, text=error + ' Повторите.')
         bot.register_next_step_handler(message, edit_commanders)
@@ -600,7 +602,7 @@ def edit_role_of_admins(message):
     for id_string in id_strings:
         if not id_string.isdigit():
             send_message(message.chat.id,
-                         text='Нужно передать ID числами, а не словами. Повторите.'.format(solovki.get_people_count()),
+                         text='Нужно передать ID числами, а не словами. Повторите.'.format(sbor.get_people_count()),
                          reply_markup=Markup.Exit.admins_edit_role_exit)
             bot.register_next_step_handler(message, edit_role_of_admins)
             return
@@ -640,7 +642,7 @@ def add_admin(message):
 
     if not id_strings[1].isdigit():
         send_message(message.chat.id,
-                     text='Нужно передать ID роли числом, а не словом. Повторите.'.format(solovki.get_people_count()),
+                     text='Нужно передать ID роли числом, а не словом. Повторите.'.format(sbor.get_people_count()),
                      reply_markup=Markup.Exit.admins_add_exit)
         bot.register_next_step_handler(message, add_admin)
         return
@@ -677,7 +679,7 @@ def remove_admin(message):
 
     if not id_strings[0].isdigit():
         send_message(message.chat.id,
-                     text='Нужно передать ID админа числом, а не словом. Повторите.'.format(solovki.get_people_count()))
+                     text='Нужно передать ID админа числом, а не словом. Повторите.'.format(sbor.get_people_count()))
         bot.register_next_step_handler(message, remove_admin)
         return
 
@@ -727,7 +729,7 @@ def find_people(message):
             bot.register_next_step_handler(message, find_people)
             return
 
-    people = solovki.find_people(keys)
+    people = sbor.find_people(keys)
     if not people:
         send_message(message.chat.id, text='Не найдено ни одного человека. Повторите.', reply_markup=Markup.Exit.people_search_exit)
         bot.register_next_step_handler(message, find_people)
@@ -737,7 +739,7 @@ def find_people(message):
                                               admins.get_users_who_can_see_ids()) else Person.Info.Full
     send_message(message.chat.id, text='Вот кого я нашел', reply_markup=Markup.Exit.people_search_exit)
     for person in people:
-        send_message(message.chat.id, text=solovki.get_person_info(person, info))
+        send_message(message.chat.id, text=sbor.get_person_info(person, info))
     bot.register_next_step_handler(message, find_people)
 
 

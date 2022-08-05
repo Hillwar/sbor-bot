@@ -1,4 +1,4 @@
-from excel_parser import Parser
+from parse.excel_parser import Parser
 from people import Service, Person, PersonRole, Squad, Commander, Info
 
 def get_solovki(workbook):
@@ -19,7 +19,7 @@ def get_solovki(workbook):
             name = Parser.get_cell_value(sheet, name_col, row)
             phone = Parser.get_cell_value(sheet, phone_col, row)
             squad_id = Parser.get_cell_value(sheet, squad_id_col, row)
-
+            print(int(id))
             person = Person(id, name, surname, phone, squad_id)
             people.append(person)
             row += 1
